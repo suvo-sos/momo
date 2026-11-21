@@ -3,3 +3,5 @@ momo
 .DS_Store
 .env
 build/
+Momo.app/
+*.dmg

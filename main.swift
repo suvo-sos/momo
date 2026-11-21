@@ -183,7 +183,25 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
         if isPaused { togglePause() }
     }
 
+    func ensureAgentPlist() {
+        let exe = Bundle.main.executablePath ?? WallDelegate.baseDir + "/momo"
+        let plist = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>Label</key><string>com.suvog.momo</string>
+            <key>ProgramArguments</key><array><string>\(exe)</string></array>
+            <key>RunAtLoad</key><true/>
+            <key>KeepAlive</key><true/>
+        </dict>
+        </plist>
+        """
+        try? plist.write(toFile: agentPlist, atomically: true, encoding: .utf8)
+    }
+
     func applicationDidFinishLaunching(_ n: Notification) {
+        ensureAgentPlist()
         if let s = try? String(contentsOfFile: hackFlag, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) {
             isHackHidden = (s == "1")
         }
