@@ -150,19 +150,10 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
         let menu = NSMenu()
 
-        // Brand line: the ▞ mark and the name in Momo orange.
-        let orange = NSColor(srgbRed: 1.0, green: 0x6B / 255.0, blue: 0x35 / 255.0, alpha: 1)
-        let brand = NSMenuItem(title: "Momo", action: nil, keyEquivalent: "")
-        let title = NSMutableAttributedString()
-        let mark = NSTextAttachment()
-        mark.image = MomoApp.quartileImage(size: 12, color: orange)
-        mark.bounds = NSRect(x: 0, y: -1.5, width: 12, height: 12)
-        title.append(NSAttributedString(attachment: mark))
-        title.append(NSAttributedString(string: "  Momo", attributes: [
-            .foregroundColor: orange,
-            .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
-        ]))
-        brand.attributedTitle = title
+        // Brand line: the ▞ mark and the name, drawn as one image so the
+        // menu cannot dim or re-tint it.
+        let brand = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        brand.image = MomoApp.brandImage()
         menu.addItem(brand)
 
         menu.addItem(.separator())
@@ -176,6 +167,36 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         menu.addItem(quit)
 
         statusItem.menu = menu
+    }
+
+    /// ▞ + "Momo" baked into a single image, in brand orange.
+    static func brandImage() -> NSImage {
+        let orange = NSColor(srgbRed: 1.0, green: 0x6B / 255.0, blue: 0x35 / 255.0, alpha: 1)
+        let height: CGFloat = 14
+        let text = NSAttributedString(string: "Momo", attributes: [
+            .foregroundColor: orange,
+            .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+        ])
+        let textSize = text.size()
+        let markSize: CGFloat = 11
+        let gap: CGFloat = 6
+        let width = markSize + gap + ceil(textSize.width)
+
+        let image = NSImage(size: NSSize(width: width, height: height))
+        image.lockFocus()
+
+        let markRect = NSRect(x: 0, y: (height - markSize) / 2, width: markSize, height: markSize)
+        orange.setFill()
+        let q = (markSize - markSize * 0.1) / 2
+        let r = q * 0.18
+        NSBezierPath(roundedRect: NSRect(x: markRect.midX + markSize * 0.05, y: markRect.midY + markSize * 0.05,
+                                        width: q, height: q), xRadius: r, yRadius: r).fill()
+        NSBezierPath(roundedRect: NSRect(x: markRect.minX, y: markRect.minY,
+                                        width: q, height: q), xRadius: r, yRadius: r).fill()
+
+        text.draw(at: NSPoint(x: markSize + gap, y: (height - textSize.height) / 2))
+        image.unlockFocus()
+        return image
     }
 
     /// ▞ — quadrant upper-right + lower-left, same geometry as assets/logo.svg.
