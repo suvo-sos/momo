@@ -301,14 +301,33 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
         }
     }
 
+    // ▞ — quadrant upper-right + lower-left, same geometry as assets/logo.svg.
+    static func quartileImage(size: CGFloat = 18) -> NSImage {
+        let img = NSImage(size: NSSize(width: size, height: size))
+        img.lockFocus()
+        NSColor.black.setFill()
+        let pad = size * 0.12
+        let inner = size - pad * 2
+        let gap = inner * 0.1
+        let q = (inner - gap) / 2
+        let r = q * 0.18
+        NSBezierPath(roundedRect: NSRect(x: pad + q + gap, y: pad + q + gap, width: q, height: q),
+                     xRadius: r, yRadius: r).fill()
+        NSBezierPath(roundedRect: NSRect(x: pad, y: pad, width: q, height: q),
+                     xRadius: r, yRadius: r).fill()
+        img.unlockFocus()
+        img.isTemplate = true
+        return img
+    }
+
     func setupMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem.button {
-            btn.title = "MOMO"
-            if let img = NSImage(systemSymbolName: "clock.fill", accessibilityDescription: "Wallpaper") {
-                img.isTemplate = true
-                btn.image = img
-            }
+            // The ▞ mark, drawn as a template image so the menu bar tints it
+            // for light/dark and it never depends on a font having the glyph.
+            btn.image = WallDelegate.quartileImage()
+            btn.imagePosition = .imageOnly
+            btn.toolTip = "Momo"
         }
         let menu = NSMenu()
         let setBG = NSMenuItem(title: "Set Background…", action: #selector(setBackground), keyEquivalent: "")
