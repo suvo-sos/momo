@@ -10,9 +10,10 @@ import WebKit
 // Live data comes from MomoFeed (MomoFeed.swift): the page cannot call the API
 // itself, and the key must never travel inside the bundle.
 
-final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate {
+final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKScriptMessageHandler {
     private var windows: [NSWindow] = []
     private var statusItem: NSStatusItem!
+    private var settingsWindow: NSWindow?
     private var pauseItem: NSMenuItem!
     private var loginItem: NSMenuItem!
     private var isPaused = false
@@ -216,8 +217,105 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate {
         loadPage()
     }
 
+    // MARK: - Settings
+
     @objc private func openSettings() {
-        NSWorkspace.shared.open(URL(fileURLWithPath: MomoSettings.path))
+        if let existing = settingsWindow {
+            existing.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let url: URL = {
+            if let res = Bundle.main.resourceURL,
+               FileManager.default.fileExists(atPath: res.appendingPathComponent("settings.html").path) {
+                return res.appendingPathComponent("settings.html")
+            }
+            return URL(fileURLWithPath: NSHomeDirectory() + "/momo/settings.html")
+        }()
+
+        let config = WKWebViewConfiguration()
+        let controller = WKUserContentController()
+
+        // Hand the current config to the page before it boots; it renders the
+        // form from this and never reads a file itself.
+        if let data = try? JSONSerialization.data(withJSONObject: settingsDictionary()),
+           let json = String(data: data, encoding: .utf8) {
+            controller.addUserScript(WKUserScript(
+                source: "window.__MOMO_SETTINGS = \(json);",
+                injectionTime: .atDocumentStart,
+                forMainFrameOnly: true))
+        }
+        controller.add(self, name: "momoSave")
+        controller.add(self, name: "momoClose")
+        config.userContentController = controller
+
+        let win = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 460, height: 700),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        win.title = "Momo"
+        win.titlebarAppearsTransparent = true
+        win.isMovableByWindowBackground = true
+        win.backgroundColor = NSColor(srgbRed: 0.04, green: 0.48, blue: 0.43, alpha: 1)
+        win.level = .floating
+        win.isReleasedWhenClosed = false
+
+        let web = WKWebView(frame: win.contentView!.bounds, configuration: config)
+        web.autoresizingMask = [.width, .height]
+        web.setValue(false, forKey: "drawsBackground")
+        win.contentView = web
+        win.center()
+
+        win.setFrameAutosaveName("MomoSettings")
+
+        settingsWindow = win
+        web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+
+        NSApp.activate(ignoringOtherApps: true)
+        win.makeKeyAndOrderFront(nil)
+    }
+
+    private func settingsDictionary() -> [String: Any] {
+        let s = feed.settings
+        return [
+            "currency": s.currency,
+            "refreshSeconds": s.refreshSeconds,
+            "holdings": s.holdings.map { ["symbol": $0.symbol, "amount": $0.amount] },
+        ]
+    }
+
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+        switch message.name {
+        case "momoClose":
+            settingsWindow?.close()
+            settingsWindow = nil
+
+        case "momoSave":
+            guard let text = message.body as? String,
+                  let data = text.data(using: .utf8),
+                  let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else { return }
+
+            let settings = feed.settings
+            if let c = obj["currency"] as? String, !c.isEmpty { settings.currency = c }
+            if let r = obj["refreshSeconds"] as? Double, r >= 15 { settings.refreshSeconds = r }
+            if let rows = obj["holdings"] as? [[String: Any]] {
+                let parsed = rows.compactMap { row -> MomoHolding? in
+                    guard let sym = row["symbol"] as? String, let amt = row["amount"] as? Double,
+                          !sym.isEmpty, amt > 0 else { return nil }
+                    return MomoHolding(symbol: sym.uppercased(), amount: amt)
+                }
+                if !parsed.isEmpty { settings.holdings = parsed }
+            }
+            settings.save()
+            feed.restart()
+
+        default:
+            break
+        }
     }
 
     @objc private func toggleLogin() {

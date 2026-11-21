@@ -15,6 +15,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 cp "$BIN" "$APP/Contents/MacOS/momo"
 cp skin.html "$APP/Contents/Resources/skin.html"
+cp settings.html "$APP/Contents/Resources/settings.html"
 cp assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
