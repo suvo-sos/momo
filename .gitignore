@@ -1,0 +1,5 @@
+web-wallpaper
+*.o
+.DS_Store
+.env
+build/

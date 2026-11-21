@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mac — Home</title>
+<style>
+  :root{
+    --canvas:#F7F6F3;
+    --surface:#FFFFFF;
+    --surface-2:#F9F9F8;
+    --border:#EAEAEA;
+    --border-soft:rgba(0,0,0,0.06);
+    --ink:#111111;
+    --ink-2:#2F3437;
+    --muted:#787774;
+    --pale-blue:#E1F3FE; --pale-blue-t:#1F6C9F;
+    --pale-green:#EDF3EC; --pale-green-t:#346538;
+    --pale-yellow:#FBF3DB; --pale-yellow-t:#956400;
+    --pale-red:#FDEBEC; --pale-red-t:#9F2F2D;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'SF Pro Display','Geist Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    background:var(--canvas);
+    color:var(--ink-2);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  .mono{font-family:'SF Mono','Geist Mono','JetBrains Mono',ui-monospace,monospace}
+  .serif{font-family:'Newsreader','Instrument Serif','Lyon Text','Playfair Display',Georgia,serif;letter-spacing:-0.02em}
+
+  /* Wallpaper */
+  .desktop{
+    position:fixed;inset:0;
+    background:
+      radial-gradient(900px 500px at 20% 15%, rgba(31,108,159,0.05), transparent 60%),
+      radial-gradient(800px 600px at 85% 80%, rgba(149,100,0,0.05), transparent 60%),
+      radial-gradient(600px 400px at 70% 20%, rgba(52,101,56,0.04), transparent 60%),
+      var(--canvas);
+  }
+  .desktop::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--border-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
+    background-size:72px 72px;
+    mask-image:radial-gradient(80% 80% at 50% 40%, black 30%, transparent 100%);
+    opacity:.55;
+    pointer-events:none;
+  }
+  .wallpaper-photo{
+    position:absolute;inset:0;
+    background:url('https://picsum.photos/seed/notiondesk/1800/1200') center/cover;
+    filter:grayscale(1) sepia(.18) contrast(.96) brightness(1.05);
+    opacity:.14;
+  }
+  .wallpaper-photo::after{
+    content:"";position:absolute;inset:0;
+    background:var(--canvas);
+    opacity:.35;
+  }
+  .ambient{
+    position:fixed;width:560px;height:560px;left:50%;top:-180px;transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(0,0,0,0.04), transparent 70%);
+    pointer-events:none;animation:drift 28s ease-in-out infinite alternate;
+  }
+  @keyframes drift{to{transform:translateX(-46%) translateY(30px)}}
+
+  /* Center clock block */
+  .center{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;pointer-events:none;z-index:5;
+  }
+  .date-line{
+    font-family:'SF Pro Display','Geist Sans','Helvetica Neue','Switzer',sans-serif;
+    font-size:clamp(18px,2.4vw,28px);
+    font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:8px;
+  }
+  .time{
+    font-family:'SF Pro Display','Geist Sans','Helvetica Neue','Switzer',sans-serif;
+    font-size:clamp(140px,22vw,280px);
+    line-height:1;letter-spacing:-0.05em;color:var(--ink);font-weight:700;
+    font-variant-numeric:tabular-nums;
+    font-feature-settings:"tnum";
+  }
+
+  @keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:720px){
+    .time{font-size:clamp(96px,28vw,140px)}
+  }
+</style>
+</head>
+<body>
+<div class="desktop">
+  <div class="wallpaper-photo"></div>
+  <div class="ambient"></div>
+
+  <main class="center">
+    <div class="date-line" id="big-date">Tuesday, September 22</div>
+    <div class="time" id="big-time">09:41</div>
+  </main>
+</div>
+
+<script>
+function tick(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  let m = pad(d.getMinutes());
+  const fullDays=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const fullMonths=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  let h12=d.getHours()%12||12;
+  document.getElementById('big-time').textContent=h12+':'+m;
+  document.getElementById('big-date').textContent=fullDays[d.getDay()]+', '+fullMonths[d.getMonth()]+' '+d.getDate();
+}
+tick();setInterval(tick,10000);
+</script>
+</body>
+</html>
