@@ -1,4 +1,4 @@
-# AGENTS.md — web-wallpaper
+# AGENTS.md — Momo
 
 Native macOS web wallpaper. Shows image / video / HTML on the desktop
 without touching the real system wallpaper.
@@ -50,7 +50,7 @@ Instead it fakes a wallpaper:
 - `video_fit.txt` — `cover` (default, fullscreen fill) / `contain`
   (fit inside, letterbox) / `stretch` (fill, ignore aspect).
 - `wrapper.html` — generated at runtime for image/video picks
-- `~/Library/LaunchAgents/com.suvog.webwallpaper.plist` — autostart
+- `~/Library/LaunchAgents/com.suvog.momo.plist` — autostart
   (outside repo, points at this dir's binary)
 
 Background photo itself (e.g. `5e2a5c12....jpg`) lives outside the repo
@@ -69,18 +69,18 @@ and is referenced by absolute `file://` URL.
 
 ```zsh
 # build
-swiftc -O -o /Users/suvog/web-wallpaper/web-wallpaper \
-  /Users/suvog/web-wallpaper/main.swift -framework Cocoa -framework WebKit
+swiftc -O -o /Users/suvog/momo/momo \
+  /Users/suvog/momo/main.swift -framework Cocoa -framework WebKit
 
 # restart under launchd
-pkill -f "web-wallpaper/web-wallpaper"
-launchctl unload ~/Library/LaunchAgents/com.suvog.webwallpaper.plist 2>/dev/null
-launchctl load -w ~/Library/LaunchAgents/com.suvog.webwallpaper.plist
+pkill -f "momo/momo"
+launchctl unload ~/Library/LaunchAgents/com.suvog.momo.plist 2>/dev/null
+launchctl load -w ~/Library/LaunchAgents/com.suvog.momo.plist
 
 # status
-ps aux | grep "[w]eb-wallpaper/web-wallpaper"
-launchctl list | grep webwallpaper
-cat /Users/suvog/web-wallpaper/target.txt
+ps aux | grep "[m]omo/momo"
+launchctl list | grep momo
+cat "$HOME/Library/Application Support/Momo/target.txt"
 ```
 
 ## Menu (WALL icon)

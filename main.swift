@@ -20,16 +20,34 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
     var videoMuted = true
     var videoLooped = true
     var hoverTimer: Timer?
-    let agentPlist = "/Users/suvog/Library/LaunchAgents/com.suvog.webwallpaper.plist"
-    let defaultHTML = "/Users/suvog/web-wallpaper/mac-home-screen.html"
-    let targetStore = "/Users/suvog/web-wallpaper/target.txt"
-    let hackFlag = "/Users/suvog/web-wallpaper/hack_hidden.txt"
-    let clockFlag = "/Users/suvog/web-wallpaper/datetime_hidden.txt"
-    let hackStore = "/Users/suvog/web-wallpaper/hackathons.json"
-    let wrapperPath = "/Users/suvog/web-wallpaper/wrapper.html"
-    let videoFlag = "/Users/suvog/web-wallpaper/video_muted.txt"
-    let videoLoopFlag = "/Users/suvog/web-wallpaper/video_loop.txt"
-    let videoFitFlag = "/Users/suvog/web-wallpaper/video_fit.txt"
+    // Read-only assets: inside the .app bundle when packaged, repo dir in dev.
+    static let baseDir: String = {
+        if let res = Bundle.main.resourceURL,
+           FileManager.default.fileExists(atPath: res.appendingPathComponent("skin.html").path) {
+            return res.path
+        }
+        return "/Users/suvog/momo"
+    }()
+
+    // Writable state: never inside the bundle.
+    static let stateDir: String = {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory() + "/Library/Application Support")
+        let dir = support.appendingPathComponent("Momo")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.path
+    }()
+
+    let agentPlist = NSHomeDirectory() + "/Library/LaunchAgents/com.suvog.momo.plist"
+    let defaultHTML = WallDelegate.baseDir + "/skin.html"
+    let targetStore = WallDelegate.stateDir + "/target.txt"
+    let hackFlag = WallDelegate.stateDir + "/hack_hidden.txt"
+    let clockFlag = WallDelegate.stateDir + "/datetime_hidden.txt"
+    let hackStore = WallDelegate.stateDir + "/hackathons.json"
+    let wrapperPath = WallDelegate.stateDir + "/wrapper.html"
+    let videoFlag = WallDelegate.stateDir + "/video_muted.txt"
+    let videoLoopFlag = WallDelegate.stateDir + "/video_loop.txt"
+    let videoFitFlag = WallDelegate.stateDir + "/video_fit.txt"
     var editWindow: NSWindow!
     var editText: NSTextView!
 
@@ -243,7 +261,7 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
     func setupMenu() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let btn = statusItem.button {
-            btn.title = "WALL"
+            btn.title = "MOMO"
             if let img = NSImage(systemSymbolName: "clock.fill", accessibilityDescription: "Wallpaper") {
                 img.isTemplate = true
                 btn.image = img

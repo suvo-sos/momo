@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CMC Skin</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body { background: #0b0d0f; }
+  .hud {
+    position: fixed; left: 40px; bottom: 34px;
+    font: 400 12px/1.6 -apple-system, "SF Pro Text", system-ui, sans-serif;
+    color: rgba(255,255,255,.6);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none; user-select: none;
+  }
+</style>
+</head>
+<body>
+<div class="hud" id="hud">—</div>
+
+<script>
+// CMC Skin — empty room.
+// Nothing but a background and one line of type. Everything else gets added
+// back deliberately, one piece at a time.
+
+let snapshot = null;
+
+const el = document.getElementById('hud');
+
+const money = (v, cur) => {
+  const sym = { USD: '$', EUR: '€', INR: '₹', GBP: '£' }[cur] || '';
+  if (v >= 1e6) return sym + (v / 1e6).toFixed(2) + 'M';
+  if (v >= 1e4) return sym + Math.round(v).toLocaleString('en-US');
+  return sym + v.toFixed(2);
+};
+
+function render() {
+  if (!snapshot) { el.textContent = 'CMC Skin'; return; }
+  const p = snapshot.portfolio;
+  const pct = p.change24h * 100;
+  el.textContent = `${money(p.value, p.currency)} / ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+}
+
+window.CMCSkin = {
+  update(snap) { snapshot = snap; render(); },
+  demo() {
+    snapshot = { portfolio: { value: 24810.42, change24h: 0.012, currency: 'USD' } };
+    render();
+  }
+};
+
+render();
+if (!window.webkit?.messageHandlers?.cmcskin) setTimeout(() => window.CMCSkin.demo(), 200);
+</script>
+</body>
+</html>
