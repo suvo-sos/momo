@@ -14,6 +14,8 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     private var windows: [NSWindow] = []
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
+    private var settingsWeb: WKWebView?
+    private var dragTimer: Timer?
     private let feed = MomoFeed()
 
     // MARK: - Paths
@@ -22,11 +24,25 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     static let agentPlist = NSHomeDirectory() + "/Library/LaunchAgents/" + agentLabel + ".plist"
 
     static let pageURL: URL = {
+        let local = URL(fileURLWithPath: NSHomeDirectory() + "/momo/skin.html")
+        if FileManager.default.fileExists(atPath: local.path) { return local }
         if let res = Bundle.main.resourceURL,
            FileManager.default.fileExists(atPath: res.appendingPathComponent("skin.html").path) {
             return res.appendingPathComponent("skin.html")
         }
-        return URL(fileURLWithPath: NSHomeDirectory() + "/momo/skin.html")
+        return local
+    }()
+
+    // Settings page. The working copy in ~/momo wins over the bundled copy so
+    // edits to settings.html show up on the next open without a rebuild.
+    static let settingsURL: URL = {
+        let local = URL(fileURLWithPath: NSHomeDirectory() + "/momo/settings.html")
+        if FileManager.default.fileExists(atPath: local.path) { return local }
+        if let res = Bundle.main.resourceURL {
+            let bundled = res.appendingPathComponent("settings.html")
+            if FileManager.default.fileExists(atPath: bundled.path) { return bundled }
+        }
+        return local
     }()
 
     // MARK: - Lifecycle
@@ -90,7 +106,7 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
         let config = WKWebViewConfiguration()
         config.userContentController.addUserScript(
-            WKUserScript(source: "window.__MOMO_HOST = true;",
+            WKUserScript(source: "window.__MOMO_HOST = true; window.__MOMO_THEME = \"\(feed.settings.theme)\";",
                          injectionTime: .atDocumentStart,
                          forMainFrameOnly: true)
         )
@@ -122,7 +138,21 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         // A page that just loaded needs the current numbers, not the next poll.
+        applyTheme(to: webView)
         if let json = feed.lastJSON { push(json, to: webView) }
+    }
+
+    // MARK: - Theme
+
+    private func applyTheme(to only: WKWebView? = nil) {
+        let js = "if(window.Momo){window.Momo.setTheme(\"\(feed.settings.theme)\");}"
+        if let web = only {
+            web.evaluateJavaScript(js, completionHandler: nil)
+        } else {
+            for win in windows {
+                (win.contentView as? WKWebView)?.evaluateJavaScript(js, completionHandler: nil)
+            }
+        }
     }
 
     // MARK: - Data
@@ -134,6 +164,10 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         } else {
             for win in windows {
                 (win.contentView as? WKWebView)?.evaluateJavaScript(js, completionHandler: nil)
+            }
+            if let pricesData = try? JSONSerialization.data(withJSONObject: feed.latestPrices),
+               let pricesJson = String(data: pricesData, encoding: .utf8) {
+                settingsWeb?.evaluateJavaScript("if(window.updatePriceData){window.updatePriceData(\(pricesJson));}", completionHandler: nil)
             }
         }
     }
@@ -258,19 +292,16 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     // MARK: - Settings
 
     @objc private func openSettings() {
-        if let existing = settingsWindow {
-            existing.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
-        }
+        let url = MomoApp.settingsURL
 
-        let url: URL = {
-            if let res = Bundle.main.resourceURL,
-               FileManager.default.fileExists(atPath: res.appendingPathComponent("settings.html").path) {
-                return res.appendingPathComponent("settings.html")
-            }
-            return URL(fileURLWithPath: NSHomeDirectory() + "/momo/settings.html")
-        }()
+        // Reopening builds a brand-new web view every time, so an edited
+        // settings.html (and the current saved config) is always picked up
+        // from disk instead of being served from the previous window.
+        if let existing = settingsWindow {
+            existing.close()
+            settingsWindow = nil
+            settingsWeb = nil
+        }
 
         let config = WKWebViewConfiguration()
         let controller = WKUserContentController()
@@ -286,18 +317,22 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         }
         controller.add(self, name: "momoSave")
         controller.add(self, name: "momoClose")
+        controller.add(self, name: "momoDrag")
+         controller.add(self, name: "momoFetchPrices")
+         controller.add(self, name: "momoSearchTokens")
         config.userContentController = controller
 
         let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 720, height: 540),
-            styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 820),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        win.title = "Momo"
-        win.titlebarAppearsTransparent = true
+         win.title = ""
+         win.titleVisibility = .hidden
+         win.titlebarAppearsTransparent = true
         win.isMovableByWindowBackground = true
-        win.backgroundColor = NSColor(srgbRed: 0.04, green: 0.48, blue: 0.43, alpha: 1)
+        win.backgroundColor = .black
         win.level = .floating
         win.isReleasedWhenClosed = false
 
@@ -305,13 +340,12 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         web.autoresizingMask = [.width, .height]
         web.setValue(false, forKey: "drawsBackground")
         win.contentView = web
-        win.contentAspectRatio = NSSize(width: 4, height: 3)
-        win.minSize = NSSize(width: 480, height: 360)
         win.center()
 
-        win.setFrameAutosaveName("MomoSettings")
+        win.setFrameAutosaveName("MomoSettings2")
 
         settingsWindow = win
+        settingsWeb = web
         web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
 
         NSApp.activate(ignoringOtherApps: true)
@@ -324,14 +358,47 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
             "currency": s.currency,
             "refreshSeconds": s.refreshSeconds,
             "holdings": s.holdings.map { ["symbol": $0.symbol, "amount": $0.amount] },
+            "theme": s.theme,
+            "apiKey": s.apiKey,
+            "prices": feed.latestPrices,
         ]
+    }
+
+    // Dragging the card by its header. The page owns the whole window surface,
+    // so a mousedown in the header asks Swift to move the window: we follow the
+    // real mouse position from the run loop instead of trusting web coordinates.
+    private func beginHeaderDrag() {
+        guard let win = settingsWindow else { return }
+        dragTimer?.invalidate()
+
+        let startMouse = NSEvent.mouseLocation
+        let startOrigin = win.frame.origin
+
+        let timer = Timer(timeInterval: 1.0 / 120.0, repeats: true) { [weak self, weak win] t in
+            guard let self else { t.invalidate(); return }
+            guard let win, NSEvent.pressedMouseButtons & 1 != 0 else {
+                t.invalidate()
+                self.dragTimer = nil
+                return
+            }
+            let now = NSEvent.mouseLocation
+            win.setFrameOrigin(NSPoint(x: startOrigin.x + (now.x - startMouse.x),
+                                       y: startOrigin.y + (now.y - startMouse.y)))
+        }
+        // .common so the timer keeps firing while the mouse button is held.
+        RunLoop.main.add(timer, forMode: .common)
+        dragTimer = timer
     }
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         switch message.name {
+        case "momoDrag":
+            beginHeaderDrag()
+
         case "momoClose":
             settingsWindow?.close()
             settingsWindow = nil
+            settingsWeb = nil
 
         case "momoSave":
             guard let text = message.body as? String,
@@ -340,11 +407,14 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
             else { return }
 
             let settings = feed.settings
+            if let k = obj["apiKey"] as? String, !k.isEmpty { settings.apiKey = k }
             if let c = obj["currency"] as? String, !c.isEmpty { settings.currency = c }
             if let r = obj["refreshSeconds"] as? Double, r >= 15 { settings.refreshSeconds = r }
+            if let t = obj["theme"] as? String, !t.isEmpty { settings.theme = t }
             if let rows = obj["holdings"] as? [[String: Any]] {
                 let parsed = rows.compactMap { row -> MomoHolding? in
-                    guard let sym = row["symbol"] as? String, let amt = row["amount"] as? Double,
+                    guard let sym = row["symbol"] as? String,
+                          let amt = (row["amount"] as? NSNumber)?.doubleValue ?? (row["amount"] as? Double),
                           !sym.isEmpty, amt > 0 else { return nil }
                     return MomoHolding(symbol: sym.uppercased(), amount: amt)
                 }
@@ -352,10 +422,47 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
             }
             settings.save()
             feed.restart()
+            applyTheme()
 
-        default:
-            break
-        }
+        case "momoFetchPrices":
+            var symbols = feed.settings.holdings.map { $0.symbol }
+            var currency = feed.settings.currency
+            if let text = message.body as? String,
+               let data = text.data(using: .utf8),
+               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let reqSymbols = obj["symbols"] as? [String], !reqSymbols.isEmpty {
+                    symbols = reqSymbols
+                }
+                if let reqCurrency = obj["currency"] as? String, !reqCurrency.isEmpty {
+                    currency = reqCurrency
+                }
+            }
+            feed.fetchQuotes(symbols: symbols, currency: currency) { [weak self] prices, _ in
+                guard let self = self, let prices = prices,
+                      let data = try? JSONSerialization.data(withJSONObject: prices),
+                      let json = String(data: data, encoding: .utf8) else { return }
+                self.settingsWeb?.evaluateJavaScript("if(window.updatePriceData){window.updatePriceData(\(json));}")
+            }
+
+         case "momoSearchTokens":
+             var query = ""
+             var currency = feed.settings.currency
+             if let text = message.body as? String,
+                let data = text.data(using: .utf8),
+                let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                 if let q = obj["query"] as? String { query = q }
+                 if let c = obj["currency"] as? String, !c.isEmpty { currency = c }
+             }
+             feed.searchTokens(query: query, currency: currency) { [weak self] results in
+                 guard let self = self,
+                       let data = try? JSONSerialization.data(withJSONObject: results),
+                       let json = String(data: data, encoding: .utf8) else { return }
+                 self.settingsWeb?.evaluateJavaScript("if(window.renderTokenResults){window.renderTokenResults(\(json));}")
+             }
+
+         default:
+             break
+         }
     }
 
 

@@ -6,10 +6,62 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
+
+  /* Themes. Pick one in Settings > Themes; the host sets data-theme before
+     the first paint, so there is no flash of the wrong world. */
+  :root {
+    --bg: #0d0f11;
+    --fg: #ffffff;
+    --fg-strong: rgba(255,255,255,.92);
+    --fg-dim: rgba(255,255,255,.38);
+    --fg-mute: rgba(255,255,255,.42);
+    --hair: rgba(255,255,255,.08);
+    --hair-soft: rgba(255,255,255,.045);
+    --foot: rgba(255,255,255,.2);
+    --up: #6fd39a;
+    --down: #e8735f;
+  }
+  :root[data-theme="slate"] {
+    --bg: #12171c;
+    --fg: #eaf0f5;
+    --fg-strong: #f4f8fb;
+    --fg-dim: rgba(234,240,245,.42);
+    --fg-mute: rgba(234,240,245,.5);
+    --hair: rgba(234,240,245,.1);
+    --hair-soft: rgba(234,240,245,.06);
+    --foot: rgba(234,240,245,.26);
+    --up: #5fd3a6;
+    --down: #ff8f7a;
+  }
+  :root[data-theme="paper"] {
+    --bg: #f4f1ea;
+    --fg: #1c1b18;
+    --fg-strong: #14130f;
+    --fg-dim: rgba(28,27,24,.46);
+    --fg-mute: rgba(28,27,24,.52);
+    --hair: rgba(0,0,0,.12);
+    --hair-soft: rgba(0,0,0,.07);
+    --foot: rgba(28,27,24,.34);
+    --up: #1f7a4d;
+    --down: #b0432f;
+  }
+  :root[data-theme="ember"] {
+    --bg: #140d0a;
+    --fg: #ffe9dc;
+    --fg-strong: #ffd9c4;
+    --fg-dim: rgba(255,233,220,.44);
+    --fg-mute: rgba(255,233,220,.52);
+    --hair: rgba(255,233,220,.12);
+    --hair-soft: rgba(255,233,220,.06);
+    --foot: rgba(255,233,220,.28);
+    --up: #f5b23c;
+    --down: #ff7a5c;
+  }
+
   body {
-    background: #0d0f11;
+    background: var(--bg);
     font: 400 13px/1 -apple-system, "SF Pro Text", system-ui, sans-serif;
-    color: #fff;
+    color: var(--fg);
     -webkit-font-smoothing: antialiased;
   }
 
@@ -34,15 +86,15 @@
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.02em;
-    color: rgba(255,255,255,.42);
+    color: var(--fg-mute);
     font-variant-numeric: tabular-nums;
   }
-  .total .delta.up   { color: #6fd39a; }
-  .total .delta.down { color: #e8735f; }
+  .total .delta.up   { color: var(--up); }
+  .total .delta.down { color: var(--down); }
 
   .rule {
     height: 1px;
-    background: rgba(255,255,255,.08);
+    background: var(--hair);
     margin-bottom: 6px;
   }
 
@@ -53,7 +105,7 @@
     grid-template-columns: 64px 1fr auto;
     align-items: baseline;
     padding: 11px 0;
-    border-bottom: 1px solid rgba(255,255,255,.045);
+    border-bottom: 1px solid var(--hair-soft);
     font-variant-numeric: tabular-nums;
   }
   .row:last-child { border-bottom: none; }
@@ -62,11 +114,11 @@
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    color: rgba(255,255,255,.92);
+    color: var(--fg-strong);
   }
   .price {
     font-size: 12px;
-    color: rgba(255,255,255,.38);
+    color: var(--fg-dim);
     letter-spacing: 0.01em;
   }
   .chg {
@@ -74,17 +126,17 @@
     font-weight: 500;
     text-align: right;
     min-width: 62px;
-    color: rgba(255,255,255,.5);
+    color: var(--fg-mute);
   }
-  .chg.up   { color: #6fd39a; }
-  .chg.down { color: #e8735f; }
+  .chg.up   { color: var(--up); }
+  .chg.down { color: var(--down); }
 
   .foot {
     margin-top: 22px;
     font-size: 10px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: rgba(255,255,255,.2);
+    color: var(--foot);
   }
 </style>
 </head>
@@ -169,6 +221,11 @@ function render() {
 window.Momo = {
   update(snap) { last = snap; render(); },
 
+  // Theme is a data attribute on <html>; every colour above is a variable.
+  setTheme(name) {
+    document.documentElement.dataset.theme = name || 'midnight';
+  },
+
   // Browser preview only. Real data arrives from the Swift host.
   demo() {
     const base = [
@@ -205,6 +262,7 @@ window.Momo = {
 };
 
 render();
+window.Momo.setTheme(window.__MOMO_THEME);
 if (!window.__MOMO_HOST) setTimeout(() => window.Momo.demo(), 200);
 </script>
 </body>

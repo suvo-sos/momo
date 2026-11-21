@@ -128,9 +128,10 @@ the actual bag, not an average of percentages.
 | `skin.html` | the wallpaper itself — total, ten rows, demo fallback |
 | `settings.html` | settings card (holdings, currency, refresh) |
 | `build.sh` | compiles, assembles `Momo.app`, signs ad-hoc |
-| `assets/logo.svg` | vector mark: `▞` on `#FF6B35` |
+| `assets/logo.svg` | vector mark: `▞` on `#0070F3` (blue) |
+| `assets/logo-blue.svg` | blue variant of the logo (used for the app icon) |
 | `assets/render_icon.py` | rasterises the logo to `AppIcon.icns` (no deps) |
-| `assets/AppIcon.icns` | generated icon, copied into the bundle |
+| `assets/AppIcon.icns` | generated icon, copied into the bundle (blue) |
 | `SPEC.md` | original concept note (partly superseded — see §9) |
 
 State lives outside the repo, in `~/Library/Application Support/Momo/`:
@@ -139,7 +140,18 @@ gone.
 
 ## 7. Design
 
-Palette:
+### Core Palette
+
+| Token | Hex | Use |
+|---|---|---|
+| Pure Black | `#000000` | logos, icons, high-contrast graphic elements |
+| Pure White | `#FFFFFF` | light surfaces, high-contrast text/fills |
+| Near-Black / Obsidian | `#171717` | dark surfaces, headings, dark-mode backgrounds |
+| Near-White / Alabaster | `#FAFAFA` | subtle light surfaces, secondary fills |
+| Charcoal | `#4D4D4D` | secondary text and body copy |
+| Accent Blue | `#0070F3` | links and interactive highlights |
+
+### Brand Palette
 
 | Token | Hex | Use |
 |---|---|---|
@@ -150,7 +162,7 @@ Palette:
 
 The mark is `▞` (quadrant upper-right + lower-left), drawn as geometry — never
 as a font glyph — so it renders identically in the menu bar, the icon and the
-SVG.
+SVG. The app icon uses the blue variant (`#0070F3`) of the mark.
 
 Wallpaper typography: system font, tabular numerals, one value + one percentage
 and ten rows. Nothing tweened, nothing animated, no charts. A wallpaper gets
