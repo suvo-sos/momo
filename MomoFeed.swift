@@ -83,6 +83,8 @@ final class MomoFeed {
 
     func start() {
         settings.load()
+        // First run: write the defaults out so "Open Settings…" has a file to show.
+        if !FileManager.default.fileExists(atPath: MomoSettings.path) { settings.save() }
         poll()
         schedule()
     }
