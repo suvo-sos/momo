@@ -150,10 +150,25 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
         let menu = NSMenu()
 
-        // Brand line: the ▞ mark and the name, drawn as one image so the
-        // menu cannot dim or re-tint it.
-        let brand = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        brand.image = MomoApp.brandImage()
+        // Brand line: the ▞ mark and the name in Momo orange. The menu must
+        // not auto-disable it (nil action) or AppKit will grey the colour out.
+        menu.autoenablesItems = false
+        let orange = NSColor(srgbRed: 1.0, green: 0x6B / 255.0, blue: 0x35 / 255.0, alpha: 1)
+        let brand = NSMenuItem(title: "Momo", action: nil, keyEquivalent: "")
+        brand.isEnabled = true
+
+        let title = NSMutableAttributedString()
+        let mark = NSTextAttachment()
+        let markImage = MomoApp.quartileImage(size: 22, color: orange)
+        markImage.size = NSSize(width: 11, height: 11)
+        mark.image = markImage
+        mark.bounds = NSRect(x: 0, y: -2, width: 11, height: 11)
+        title.append(NSAttributedString(attachment: mark))
+        title.append(NSAttributedString(string: "  Momo", attributes: [
+            .foregroundColor: orange,
+            .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+        ]))
+        brand.attributedTitle = title
         menu.addItem(brand)
 
         menu.addItem(.separator())
