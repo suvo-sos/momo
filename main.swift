@@ -150,8 +150,19 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
         let menu = NSMenu()
 
+        // Brand line: the ▞ mark and the name in Momo orange.
+        let orange = NSColor(srgbRed: 1.0, green: 0x6B / 255.0, blue: 0x35 / 255.0, alpha: 1)
         let brand = NSMenuItem(title: "Momo", action: nil, keyEquivalent: "")
-        brand.isEnabled = false
+        let title = NSMutableAttributedString()
+        let mark = NSTextAttachment()
+        mark.image = MomoApp.quartileImage(size: 12, color: orange)
+        mark.bounds = NSRect(x: 0, y: -1.5, width: 12, height: 12)
+        title.append(NSAttributedString(attachment: mark))
+        title.append(NSAttributedString(string: "  Momo", attributes: [
+            .foregroundColor: orange,
+            .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+        ]))
+        brand.attributedTitle = title
         menu.addItem(brand)
 
         menu.addItem(.separator())
@@ -168,10 +179,10 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     }
 
     /// ▞ — quadrant upper-right + lower-left, same geometry as assets/logo.svg.
-    static func quartileImage(size: CGFloat = 18) -> NSImage {
+    static func quartileImage(size: CGFloat = 18, color: NSColor = .black) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size))
         image.lockFocus()
-        NSColor.black.setFill()
+        color.setFill()
 
         let pad = size * 0.12
         let inner = size - pad * 2
@@ -185,7 +196,7 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
                      xRadius: r, yRadius: r).fill()
 
         image.unlockFocus()
-        image.isTemplate = true
+        image.isTemplate = (color == .black)
         return image
     }
 
