@@ -177,15 +177,28 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         // with a gear, and this menu is branding, not a menu bar app.
         let settings = NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: "")
         settings.target = self
-        settings.image = nil
+        // A zero-area transparent image blanks the leading icon slot, which
+        // macOS otherwise fills with a gear for anything settings-shaped.
+        settings.image = MomoApp.blankImage()
         menu.addItem(settings)
 
         let quit = NSMenuItem(title: "Quit Momo", action: #selector(quit), keyEquivalent: "")
         quit.target = self
-        quit.image = nil
+        quit.image = MomoApp.blankImage()
         menu.addItem(quit)
 
         statusItem.menu = menu
+    }
+
+    /// A 1×1 fully transparent image, used to occupy (and so blank) the
+    /// leading icon slot of a menu item.
+    static func blankImage() -> NSImage {
+        let image = NSImage(size: NSSize(width: 1, height: 1))
+        image.lockFocus()
+        NSColor.clear.set()
+        NSRect(x: 0, y: 0, width: 1, height: 1).fill(using: .copy)
+        image.unlockFocus()
+        return image
     }
 
     /// ▞ + "Momo" baked into a single image, in brand orange.
