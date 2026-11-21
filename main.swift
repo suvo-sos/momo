@@ -14,9 +14,6 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     private var windows: [NSWindow] = []
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
-    private var pauseItem: NSMenuItem!
-    private var loginItem: NSMenuItem!
-    private var isPaused = false
     private let feed = MomoFeed()
 
     // MARK: - Paths
@@ -131,7 +128,6 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     // MARK: - Data
 
     private func push(_ json: String, to only: WKWebView? = nil) {
-        guard !isPaused else { return }
         let js = "if(window.Momo){window.Momo.update(\(json));}"
         if let web = only {
             web.evaluateJavaScript(js, completionHandler: nil)
@@ -154,26 +150,15 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
         let menu = NSMenu()
 
-        pauseItem = NSMenuItem(title: "Pause Wallpaper", action: #selector(togglePause), keyEquivalent: "p")
-        pauseItem.target = self
-        menu.addItem(pauseItem)
+        let brand = NSMenuItem(title: "Momo", action: nil, keyEquivalent: "")
+        brand.isEnabled = false
+        menu.addItem(brand)
 
-        let reload = NSMenuItem(title: "Reload", action: #selector(reload), keyEquivalent: "r")
-        reload.target = self
-        menu.addItem(reload)
+        menu.addItem(.separator())
 
-        let settings = NSMenuItem(title: "Open Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
-
-        menu.addItem(.separator())
-
-        loginItem = NSMenuItem(title: "Start at Login", action: #selector(toggleLogin), keyEquivalent: "")
-        loginItem.target = self
-        loginItem.state = FileManager.default.fileExists(atPath: MomoApp.agentPlist) ? .on : .off
-        menu.addItem(loginItem)
-
-        menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "Quit Momo", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
@@ -204,18 +189,7 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         return image
     }
 
-    @objc private func togglePause() {
-        isPaused.toggle()
-        for win in windows {
-            isPaused ? win.orderOut(nil) : win.orderFrontRegardless()
-        }
-        pauseItem.title = isPaused ? "Start Wallpaper" : "Pause Wallpaper"
-        if !isPaused, let json = feed.lastJSON { push(json) }
-    }
 
-    @objc private func reload() {
-        loadPage()
-    }
 
     // MARK: - Settings
 
@@ -318,18 +292,6 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         }
     }
 
-    @objc private func toggleLogin() {
-        let loaded = FileManager.default.fileExists(atPath: MomoApp.agentPlist)
-        if loaded {
-            launchctl("unload", "-w", MomoApp.agentPlist)
-            try? FileManager.default.removeItem(atPath: MomoApp.agentPlist)
-            loginItem.state = .off
-        } else {
-            ensureAgentPlist()
-            launchctl("load", "-w", MomoApp.agentPlist)
-            loginItem.state = .on
-        }
-    }
 
     @objc private func quit() {
         launchctl("unload", MomoApp.agentPlist)
