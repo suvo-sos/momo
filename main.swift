@@ -50,6 +50,19 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
     let videoFitFlag = WallDelegate.stateDir + "/video_fit.txt"
     var editWindow: NSWindow!
     var editText: NSTextView!
+    let feed = MomoFeed()
+
+    // Push the latest market snapshot into every wallpaper window.
+    func pushSnapshot(_ json: String, to only: WKWebView? = nil) {
+        let js = "if(window.Momo){window.Momo.update(\(json));}"
+        if let w = only {
+            w.evaluateJavaScript(js, completionHandler: nil)
+        } else {
+            for win in windows {
+                (win.contentView as? WKWebView)?.evaluateJavaScript(js, completionHandler: nil)
+            }
+        }
+    }
 
     func run(_ args: String...) {
         let p = Process()
@@ -203,6 +216,13 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
             win.setFrame(frame, display: true)
 
             let config = WKWebViewConfiguration()
+            // Tells the page it is running inside the app, so it waits for real
+            // data instead of starting the browser demo cycle.
+            config.userContentController.addUserScript(
+                WKUserScript(source: "window.__MOMO_HOST = true;",
+                             injectionTime: .atDocumentStart,
+                             forMainFrameOnly: true)
+            )
             let web = WKWebView(frame: frame, configuration: config)
             web.navigationDelegate = self
             web.uiDelegate = self
@@ -217,6 +237,11 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
         loadTargetInAllWindows()
         setupMenu()
         startHoverTimer()
+
+        feed.onSnapshot = { [weak self] json in
+            self?.pushSnapshot(json)
+        }
+        feed.start()
     }
 
     func hackCount() -> Int {
@@ -346,6 +371,9 @@ class WallDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKUID
         applyVideoSound(to: webView)
         applyVideoLoop(to: webView)
         installLoopEnforcer(to: webView)
+        // A reloaded page needs the current market state immediately, not on
+        // the next poll.
+        if let json = feed.lastJSON { pushSnapshot(json, to: webView) }
     }
 
     func applyVideoSound(to target: WKWebView? = nil) {

@@ -2,56 +2,210 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>CMC Skin</title>
+<title>Momo</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
-  body { background: #0b0d0f; }
-  .hud {
-    position: fixed; left: 40px; bottom: 34px;
-    font: 400 12px/1.6 -apple-system, "SF Pro Text", system-ui, sans-serif;
-    color: rgba(255,255,255,.6);
+  body {
+    background: #0d0f11;
+    font: 400 13px/1 -apple-system, "SF Pro Text", system-ui, sans-serif;
+    color: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .panel {
+    position: fixed;
+    left: 64px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 340px;
+  }
+
+  /* total */
+  .total { margin-bottom: 28px; }
+  .total .value {
+    font-size: 30px;
+    font-weight: 300;
+    letter-spacing: -0.015em;
     font-variant-numeric: tabular-nums;
-    pointer-events: none; user-select: none;
+  }
+  .total .delta {
+    margin-top: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(255,255,255,.42);
+    font-variant-numeric: tabular-nums;
+  }
+  .total .delta.up   { color: #6fd39a; }
+  .total .delta.down { color: #e8735f; }
+
+  .rule {
+    height: 1px;
+    background: rgba(255,255,255,.08);
+    margin-bottom: 6px;
+  }
+
+  /* ten tokens */
+  .list { display: flex; flex-direction: column; }
+  .row {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    align-items: baseline;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255,255,255,.045);
+    font-variant-numeric: tabular-nums;
+  }
+  .row:last-child { border-bottom: none; }
+
+  .sym {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,.92);
+  }
+  .price {
+    font-size: 12px;
+    color: rgba(255,255,255,.38);
+    letter-spacing: 0.01em;
+  }
+  .chg {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: right;
+    min-width: 62px;
+    color: rgba(255,255,255,.5);
+  }
+  .chg.up   { color: #6fd39a; }
+  .chg.down { color: #e8735f; }
+
+  .foot {
+    margin-top: 22px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.2);
   }
 </style>
 </head>
 <body>
-<div class="hud" id="hud">—</div>
+<div class="panel">
+  <div class="total">
+    <div class="value" id="total">—</div>
+    <div class="delta" id="delta">—</div>
+  </div>
+  <div class="rule"></div>
+  <div class="list" id="list"></div>
+  <div class="foot" id="foot">momo · demo</div>
+</div>
 
 <script>
-// CMC Skin — empty room.
-// Nothing but a background and one line of type. Everything else gets added
-// back deliberately, one piece at a time.
+// Momo — main theme.
+// One portfolio total, ten holdings. Nothing else on the desktop.
+//
+// Host API:  window.Momo.update({ portfolio, coins, at, currency })
+//            portfolio = { value, change24h, currency }
+//            coins     = [{ symbol, price, change24h }]   (max 10)
 
-let snapshot = null;
+const MAX_ROWS = 10;
+const elTotal = document.getElementById('total');
+const elDelta = document.getElementById('delta');
+const elList  = document.getElementById('list');
+const elFoot  = document.getElementById('foot');
 
-const el = document.getElementById('hud');
+const CUR_SYM = { USD: '$', EUR: '€', INR: '₹', GBP: '£', JPY: '¥' };
 
-const money = (v, cur) => {
-  const sym = { USD: '$', EUR: '€', INR: '₹', GBP: '£' }[cur] || '';
+function money(v, cur) {
+  const sym = CUR_SYM[cur] || '';
   if (v >= 1e6) return sym + (v / 1e6).toFixed(2) + 'M';
   if (v >= 1e4) return sym + Math.round(v).toLocaleString('en-US');
-  return sym + v.toFixed(2);
-};
-
-function render() {
-  if (!snapshot) { el.textContent = 'CMC Skin'; return; }
-  const p = snapshot.portfolio;
-  const pct = p.change24h * 100;
-  el.textContent = `${money(p.value, p.currency)} / ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+  if (v >= 1)    return sym + v.toFixed(2);
+  return sym + v.toPrecision(3);
 }
 
-window.CMCSkin = {
-  update(snap) { snapshot = snap; render(); },
+function price(v, cur) {
+  const sym = CUR_SYM[cur] || '';
+  if (v >= 1000) return sym + v.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (v >= 1)    return sym + v.toFixed(2);
+  if (v >= 0.01) return sym + v.toFixed(4);
+  return sym + v.toPrecision(4);
+}
+
+function pct(v) {
+  const n = v * 100;
+  return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+}
+
+function classFor(v) {
+  if (Math.abs(v) < 0.0005) return '';
+  return v > 0 ? 'up' : 'down';
+}
+
+let last = null;
+
+function render() {
+  if (!last) return;
+  const cur = last.portfolio.currency || 'USD';
+  const p = last.portfolio;
+
+  elTotal.textContent = money(p.value, cur);
+  elDelta.textContent = pct(p.change24h) + ' today';
+  elDelta.className = 'delta ' + classFor(p.change24h);
+
+  const coins = (last.coins || []).slice(0, MAX_ROWS);
+  elList.innerHTML = coins.map(c => `
+    <div class="row">
+      <span class="sym">${c.symbol}</span>
+      <span class="price">${price(c.price, cur)}</span>
+      <span class="chg ${classFor(c.change24h)}">${pct(c.change24h)}</span>
+    </div>`).join('');
+
+  const t = last.at ? new Date(last.at) : null;
+  elFoot.textContent = t
+    ? 'momo · ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    : 'momo';
+}
+
+window.Momo = {
+  update(snap) { last = snap; render(); },
+
+  // Browser preview only. Real data arrives from the Swift host.
   demo() {
-    snapshot = { portfolio: { value: 24810.42, change24h: 0.012, currency: 'USD' } };
-    render();
+    const base = [
+      ['BTC',  91204, 0.0214], ['ETH', 3142.55, 0.0142], ['SOL', 187.9, 0.0531],
+      ['BNB',  612.4, -0.0068], ['XRP', 2.134, 0.0121], ['DOGE', 0.3821, -0.0243],
+      ['ADA',  0.9182, 0.0087], ['AVAX', 38.62, -0.0155], ['LINK', 22.41, 0.0342],
+      ['TON',  5.182, 0.0041],
+    ];
+    const holdings = [0.12, 1.4, 9.5, 0.8, 320, 2400, 900, 22, 40, 120];
+
+    const build = (drift) => {
+      const coins = base.map(([symbol, px, chg], i) => ({
+        symbol,
+        price: px * (1 + drift * (0.4 + i * 0.12)),
+        change24h: chg + drift * (0.5 + i * 0.1),
+      }));
+      const value = coins.reduce((s, c, i) => s + c.price * holdings[i], 0);
+      const prev = coins.reduce((s, c, i) => s + (c.price / (1 + c.change24h)) * holdings[i], 0);
+      return {
+        portfolio: { value, change24h: (value - prev) / prev, currency: 'USD' },
+        coins,
+        at: Date.now(),
+      };
+    };
+
+    let drift = 0;
+    this.update(build(drift));
+    setInterval(() => {
+      drift += (Math.random() - 0.5) * 0.01;
+      drift = Math.max(-0.08, Math.min(0.08, drift));
+      this.update(build(drift));
+    }, 4000);
   }
 };
 
 render();
-if (!window.webkit?.messageHandlers?.cmcskin) setTimeout(() => window.CMCSkin.demo(), 200);
+if (!window.__MOMO_HOST) setTimeout(() => window.Momo.demo(), 200);
 </script>
 </body>
 </html>
