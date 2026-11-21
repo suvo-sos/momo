@@ -173,12 +173,16 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
 
         menu.addItem(.separator())
 
-        let settings = NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
+        // No key equivalent: macOS 26 decorates the "preferences" shortcut
+        // with a gear, and this menu is branding, not a menu bar app.
+        let settings = NSMenuItem(title: "Settings", action: #selector(openSettings), keyEquivalent: "")
         settings.target = self
+        settings.image = nil
         menu.addItem(settings)
 
-        let quit = NSMenuItem(title: "Quit Momo", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: "Quit Momo", action: #selector(quit), keyEquivalent: "")
         quit.target = self
+        quit.image = nil
         menu.addItem(quit)
 
         statusItem.menu = menu
