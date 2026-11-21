@@ -38,18 +38,6 @@
     padding: 22px 24px 18px;
     border-bottom: 1px solid var(--line);
   }
-  .mark {
-    width: 26px; height: 26px; border-radius: 7px;
-    background: var(--orange);
-    position: relative; flex: none;
-  }
-  .mark::before, .mark::after {
-    content: ""; position: absolute; width: 9px; height: 9px; border-radius: 2px;
-    background: var(--paper);
-  }
-  .mark::before { top: 5px; right: 5px; }
-  .mark::after  { bottom: 5px; left: 5px; }
-
   header h1 { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
   header p  { font-size: 11px; color: var(--mute); margin-top: 1px; }
 
@@ -123,7 +111,6 @@
 <body>
 <div class="card">
   <header>
-    <div class="mark"></div>
     <div>
       <h1>Momo</h1>
       <p>Your portfolio on the desktop</p>

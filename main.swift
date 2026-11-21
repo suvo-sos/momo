@@ -257,8 +257,8 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         config.userContentController = controller
 
         let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 700),
-            styleMask: [.titled, .closable, .fullSizeContentView],
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 540),
+            styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -273,6 +273,8 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         web.autoresizingMask = [.width, .height]
         web.setValue(false, forKey: "drawsBackground")
         win.contentView = web
+        win.contentAspectRatio = NSSize(width: 4, height: 3)
+        win.minSize = NSSize(width: 480, height: 360)
         win.center()
 
         win.setFrameAutosaveName("MomoSettings")
