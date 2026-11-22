@@ -4,21 +4,13 @@
 
 A live macOS wallpaper that turns your crypto holdings into ambient light. One number, one mood — always visible, never in the way.
 
-[![macOS](https://img.shields.io/badge/macOS-13%2B-black?logo=apple)](https://www.apple.com/macos/)
-[![Swift](https://img.shields.io/badge/Swift-5-orange?logo=swift)](https://www.swift.org/)
-[![CoinMarketCap API](https://img.shields.io/badge/CoinMarketCap-API-3861FB)](https://coinmarketcap.com/api/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Build with CMC — Round 2](https://img.shields.io/badge/Build%20with%20CMC-Round%202-3861FB)](https://dorahacks.io/)
-
-Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track: **Data and Visualisation**.
-
 ## Download
 
 **macOS 13+** — get the app, no build needed:
 
 <p align="center">
   <a href="https://github.com/suvo-sos/momo/releases/latest">
-    <img src="https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download Momo for Mac">
+    <img src="https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white" width="400" alt="Download Momo for Mac">
   </a>
 </p>
 
@@ -36,6 +28,16 @@ Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track
 No account, no setup. It works out of the box with Momo's built-in CoinMarketCap key. If that key runs out of credits, paste your own free key into **Settings → Your own CMC key**.
 
 Prefer to build it yourself? See [Quick start](#quick-start) below.
+
+<p align="center">
+  <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-13%2B-black?logo=apple" alt="macOS"></a>
+  <a href="https://www.swift.org/"><img src="https://img.shields.io/badge/Swift-5-orange?logo=swift" alt="Swift"></a>
+  <a href="https://coinmarketcap.com/api/"><img src="https://img.shields.io/badge/CoinMarketCap-API-3861FB" alt="CoinMarketCap API"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"></a>
+  <a href="https://dorahacks.io/"><img src="https://img.shields.io/badge/Build%20with%20CMC-Round%202-3861FB" alt="Build with CMC — Round 2"></a>
+</p>
+
+Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track: **Data and Visualisation**.
 
 ---
 
