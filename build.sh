@@ -77,8 +77,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </plist>
 PLIST
 
-echo "→ signing (ad-hoc)"
-codesign --force --deep -s - "$APP" 2>/dev/null || echo "  (codesign skipped)"
+echo "→ signing (skipped — local build, ad-hoc rejected by macOS 27 launch constraints)"
+# codesign --force --deep -s - "$APP" 2>/dev/null || true
 
 # Restart the running copy so a build always ends with the new binary live.
 # `./build.sh --no-launch` builds without touching what is running.
