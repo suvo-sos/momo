@@ -4,6 +4,8 @@
 
 A live macOS wallpaper that turns your crypto holdings into ambient light. Up, the room glows green. Down, it cools to red. You learn how your day is going in half a second, without opening anything.
 
+![Momo — Scale on Laser Flow](docs/screenshots/cover.png)
+
 ## Download
 
 **macOS 13+** — no build needed:
