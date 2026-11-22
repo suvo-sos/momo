@@ -47,7 +47,8 @@
     grid-row: 1;
     display: flex; align-items: center; justify-content: space-between;
     gap: 12px;
-    padding: 0 16px;
+    height: 28px;
+    padding: 0 12px;
     background: #0070F3;
     cursor: grab;
     user-select: none; -webkit-user-select: none;
@@ -57,12 +58,12 @@
   }
   .header-bar:active { cursor: grabbing; }
   .header-bar .hb-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-  .header-bar .hb-mark { font-size: 16px; font-weight: 700; color: #fff; opacity: .9; }
-  .header-bar .hb-title { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: -.01em; }
+  .header-bar .hb-mark { font-size: 14px; font-weight: 700; color: #fff; opacity: .9; }
+  .header-bar .hb-title { font-size: 12px; font-weight: 600; color: #fff; letter-spacing: -.01em; }
   .header-bar .hb-nav { display: flex; gap: 0; margin-left: 8px; }
   .header-bar .hb-nav button {
     appearance: none; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-    color: #fff; border-radius: 0; padding: 4px 12px; font: inherit; font-size: 11px; font-weight: 500;
+    color: #fff; border-radius: 0; padding: 3px 10px; font: inherit; font-size: 11px; font-weight: 500;
     cursor: pointer; transition: background .13s, border-color .13s;
     border-right-width: 0; white-space: nowrap; line-height: 1.2;
   }
@@ -73,8 +74,8 @@
   .header-bar .hb-nav button.is-active { background: rgba(255,255,255,.32); border-color: rgba(255,255,255,.45); font-weight: 600; }
   .header-bar .hb-right { display: flex; align-items: center; gap: 10px; text-align: right; flex-shrink: 0; }
   .header-bar .hb-portfolio { display: flex; align-items: center; gap: 8px; line-height: 1.1; flex-wrap: nowrap; }
-  .header-bar .hb-portfolio .lbl { font-size: 12px; color: rgba(255,255,255,.85); font-weight: 600; letter-spacing: .01em; white-space: nowrap; flex-shrink: 0; }
-  .header-bar .hb-portfolio .val { font-size: 18px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+  .header-bar .hb-portfolio .lbl { font-size: 11px; color: rgba(255,255,255,.85); font-weight: 600; letter-spacing: .01em; white-space: nowrap; flex-shrink: 0; }
+  .header-bar .hb-portfolio .val { font-size: 15px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
   .header-bar .hb-portfolio .chg { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
   .header-bar .hb-portfolio .chg.up { color: #a7f3d0; }
   .header-bar .hb-portfolio .chg.down { color: #fecaca; }
@@ -414,9 +415,45 @@
     cursor: not-allowed;
   }
 
-  /* ---------- themes ---------- */
+  /* ---------- themes: two pickers, background and content ---------- */
 
-  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .themes { display: flex; flex-direction: column; gap: 22px; }
+  .theme-group-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--mute); margin-bottom: 10px;
+  }
+  .theme-sub {
+    font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--mute); margin: 0 0 8px;
+  }
+  .theme-chips + .theme-sub { margin-top: 14px; }
+  .theme-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .theme-chip {
+    appearance: none; cursor: pointer; font: inherit; font-size: 12px; font-weight: 600;
+    color: var(--text); background: transparent;
+    border: 1.5px solid var(--border); border-radius: 999px; padding: 7px 14px;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .theme-chip:hover { border-color: #555; }
+  .theme-chip.selected { background: var(--blue); border-color: var(--blue); color: #fff; cursor: default; }
+  /* One live preview of the selected theme, instead of a box per option. */
+  .theme-preview-big {
+    position: relative; overflow: hidden; height: 300px; margin-top: 16px;
+    border: 1.5px solid var(--border); border-radius: 9px; background: #000;
+  }
+  .preview-bg { position: absolute; inset: 0; }
+  .preview-panel {
+    position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
+    width: 300px; z-index: 1; pointer-events: none;
+  }
+  .preview-dash { position: absolute; inset: 0; z-index: 1; display: none; pointer-events: none; }
+  /* Elegant contents preview like the dashboard: a fixed 1280px-wide
+     layer scaled to fit, so the big type reads at preview size. */
+  .preview-elc { position: absolute; inset: 0; z-index: 1; display: none; pointer-events: none; }
+  /* The dashboard goes clear in the preview, like on the wallpaper, so the
+     background shows through the gaps between cards. */
+  .preview-dash.clear .fpb .fpb-c { background: transparent; }
+  .theme-save { margin-top: 22px; }
 
   .theme {
     appearance: none; text-align: left; cursor: pointer;
@@ -437,6 +474,17 @@
   .theme .bar { height: 5px; border-radius: 2.5px; flex: 1; opacity: .9; }
   .theme .name { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
   .theme .meta { font-size: 10px; color: var(--mute); margin-top: 2px; letter-spacing: .01em; }
+  /* Miniature of the minimal wallpaper panel, for the theme preview. */
+  .mini-panel { padding: 14px 16px; font-variant-numeric: tabular-nums; }
+  .mini-total { font-size: 22px; font-weight: 200; letter-spacing: -.02em; }
+  .mini-delta { font-size: 10px; color: #4ade80; margin: 2px 0 8px; }
+  .mini-row {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: #999; padding: 3px 0;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .mini-row span:first-child { color: #fff; font-weight: 600; }
+  .mini-row .up { color: #4ade80; }
 
   /* ---------- footer ---------- */
 
@@ -497,7 +545,7 @@
     <div class="hb-right">
       <nav class="hb-nav">
         <button data-pane="portfolio" class="is-active">My portfolio</button>
-        <button data-pane="themes">Themes</button>
+        <button data-pane="themes">Theme</button>
         <button data-pane="settings">Settings</button>
       </nav>
       <div class="hb-portfolio">
@@ -539,13 +587,10 @@
 
 
     <section class="pane" id="pane-themes">
-      <div class="pane-head">
-        <div>
-          <h2>Themes</h2>
-        </div>
-        <div class="actions"></div>
-      </div>
       <div class="themes" id="themes"></div>
+      <div class="theme-save">
+        <button class="primary" id="save-themes">Save</button>
+      </div>
     </section>
 
     <section class="pane" id="pane-settings">
@@ -577,6 +622,13 @@
   </main>
 </div>
 
+<script src="chrome-arcs.js"></script>
+<script src="anodized-ink.js"></script>
+<script src="holo-mosaic.js"></script>
+<script src="laser-flow.js"></script>
+<script src="plasma-wave.js"></script>
+<script src="finance-bento.js"></script>
+<script src="elegant-contents.js"></script>
 <script>
 // Settings card. Swift hands us the current config at document start and
 // receives the saved one as a message — the page never touches the disk.
@@ -602,7 +654,7 @@ const state = window.__MOMO_SETTINGS || {
   ],
   currency: 'USD',
   refreshSeconds: 60,
-  theme: 'midnight',
+  theme: 'aurora-panel',
   apiKey: '',
 };
 
@@ -643,9 +695,36 @@ const POPULAR_COINS = [
   { symbol: 'ALGO', name: 'Algorand' }
 ];
 
-const THEMES = [];
+const BG_THEMES = [
+  { id: 'aurora', name: 'Chrome Arcs', meta: 'Black chrome rings, iridescent light' },
+  { id: 'embers', name: 'Anodized Ink', meta: 'Crimson ink, re-tints with the market' },
+  { id: 'holo', name: 'Holo Mosaic', meta: 'Spectral tiles that flip and shimmer' },
+  { id: 'laser', name: 'Laser Flow', meta: 'A beam drops and spills light along a surface' },
+  { id: 'plasma', name: 'Plasma Wave', meta: 'Two raymarched plasma ribbons, violet and cyan' },
+];
+const CONTENT_THEMES = [
+  { id: 'panel', name: 'Minimal', meta: 'One total, ten rows' },
+  { id: 'dashboard', name: 'Dashboard', meta: 'Net worth, allocation, cash flow' },
+  { id: 'focus', name: 'Focus', meta: 'One huge total, best and worst today' },
+  { id: 'ledger', name: 'Ledger', meta: 'Statement table with thin change bars' },
+  { id: 'scale', name: 'Scale', meta: 'Coins plotted on a 24h-change axis' },
+];
 
-let selectedTheme = THEMES.some(t => t.id === state.theme) ? state.theme : 'midnight';
+// The saved theme is one string, "background-content" (e.g. "aurora-panel").
+// Swift passes it through untouched, so no Swift change is needed.
+function parseTheme(value) {
+  if (value === 'rain') return { bg: 'aurora', content: 'dashboard' }; // legacy
+  const parts = String(value || '').split('-');
+  const contents = ['dashboard', 'focus', 'ledger', 'scale'];
+  return {
+    bg: (parts[0] === 'embers' || parts[0] === 'holo' || parts[0] === 'laser' || parts[0] === 'plasma') ? parts[0] : 'aurora',
+    content: contents.indexOf(parts[1]) !== -1 ? parts[1] : 'panel',
+  };
+}
+
+const _parsed = parseTheme(state.theme);
+let selectedBg = _parsed.bg;
+let selectedContent = _parsed.content;
 
 document.getElementById('currency').value = state.currency || 'USD';
 document.getElementById('refresh').value = state.refreshSeconds || 60;
@@ -953,25 +1032,212 @@ function wireAddButtons(results) {
 
 /* ---------- themes ---------- */
 
+// One live preview of the selected theme. Only one background shader runs
+// at a time (the old grid ran all five at once); the dashboard mounts once
+// and is scaled to fit the preview.
+var previewBgHandle = null;
+var dashWrap = null;
+var dashMounted = false;
+
+function destroyPreviewBg() {
+  if (!previewBgHandle) return;
+  // ChromeArcs returns a bare destroy function; the rest return { destroy }.
+  if (typeof previewBgHandle === 'function') previewBgHandle();
+  else if (previewBgHandle.destroy) previewBgHandle.destroy();
+  previewBgHandle = null;
+}
+
+function mountPreviewBg(id) {
+  var bgEl = themesEl.querySelector('.preview-bg');
+  if (!bgEl) return;
+  destroyPreviewBg();
+  bgEl.innerHTML = '';
+  if (id === 'aurora' && window.ChromeArcs) previewBgHandle = window.ChromeArcs.mount(bgEl, { speed: 1, rings: 1, interactive: true });
+  else if (id === 'embers' && window.AnodizedInk) previewBgHandle = window.AnodizedInk.mount(bgEl, { preset: 'crimson', interactive: true });
+  else if (id === 'holo' && window.HoloMosaic) previewBgHandle = window.HoloMosaic.mount(bgEl, { mouseInteraction: true });
+  else if (id === 'laser' && window.LaserFlow) previewBgHandle = window.LaserFlow.mount(bgEl, { mouseInteraction: true });
+  else if (id === 'plasma' && window.PlasmaWave) previewBgHandle = window.PlasmaWave.mount(bgEl, { mouseInteraction: true });
+}
+
+function layoutDash() {
+  var preview = themesEl.querySelector('.theme-preview-big');
+  if (!preview || !dashWrap) return;
+  var w = preview.clientWidth, h = preview.clientHeight;
+  if (!w || !h) return;
+  var bw = 1280, bh = dashWrap.scrollHeight || 976;
+  var scale = Math.min(w / bw, h / bh);
+  dashWrap.style.transform = 'scale(' + scale + ')';
+  dashWrap.style.left = ((w - bw * scale) / 2) + 'px';
+  dashWrap.style.top = ((h - bh * scale) / 2) + 'px';
+}
+
+function layoutElc(id) {
+  var preview = themesEl.querySelector('.theme-preview-big');
+  var wrap = elcWraps[id];
+  if (!preview || !wrap) return;
+  var w = preview.clientWidth, h = preview.clientHeight;
+  if (!w || !h) return;
+  var bw = 1280, bh = 720;
+  var scale = Math.min(w / bw, h / bh);
+  wrap.style.transform = 'scale(' + scale + ')';
+  wrap.style.left = ((w - bw * scale) / 2) + 'px';
+  wrap.style.top = ((h - bh * scale) / 2) + 'px';
+}
+
+// Demo snapshot for the elegant previews — same coins as the wallpaper demo.
+function demoSnap() {
+  const base = [
+    ['BTC', 91204, 0.0214], ['ETH', 3142.55, 0.0142], ['SOL', 187.9, 0.0531],
+    ['BNB', 612.4, -0.0068], ['XRP', 2.134, 0.0121], ['DOGE', 0.3821, -0.0243],
+    ['ADA', 0.9182, 0.0087], ['AVAX', 38.62, -0.0155], ['LINK', 22.41, 0.0342],
+    ['TON', 5.182, 0.0041],
+  ];
+  const holdings = [0.12, 1.4, 9.5, 0.8, 320, 2400, 900, 22, 40, 120];
+  const coins = base.map(([symbol, px, chg]) => ({ symbol, price: px, change24h: chg }));
+  const value = coins.reduce((s, c, i) => s + c.price * holdings[i], 0);
+  const prev = coins.reduce((s, c, i) => s + (c.price / (1 + c.change24h)) * holdings[i], 0);
+  return {
+    portfolio: { value, change24h: (value - prev) / prev, currency: 'USD' },
+    coins,
+    at: Date.now(),
+  };
+}
+
+var elcWraps = {};
+var elcMounted = {};
+var ELC_IDS = ['focus', 'ledger', 'scale'];
+var ELC_MAP = { focus: 'Focus', ledger: 'Ledger', scale: 'Scale' };
+
+function showPreviewContent() {
+  var panel = themesEl.querySelector('.preview-panel');
+  var dash = themesEl.querySelector('.preview-dash');
+  if (panel) panel.style.display = selectedContent === 'panel' ? 'block' : 'none';
+  if (dash) dash.style.display = selectedContent === 'dashboard' ? 'block' : 'none';
+  if (selectedContent === 'dashboard' && dash) {
+    if (!dashMounted && window.FinanceBento) {
+      dashMounted = true;
+      window.FinanceBento.mount(dashWrap, demoBentoData(), { title: 'Overview', subtitle: 'Demo data' });
+    }
+    layoutDash();
+    requestAnimationFrame(layoutDash);
+  }
+  ELC_IDS.forEach(function (id) {
+    var layer = themesEl.querySelector('.preview-elc[data-elc="' + id + '"]');
+    if (!layer) return;
+    layer.style.display = selectedContent === id ? 'block' : 'none';
+    if (selectedContent === id && !elcMounted[id] && window.ElegantContents && window.ElegantContents[ELC_MAP[id]]) {
+      elcMounted[id] = true;
+      window.ElegantContents[ELC_MAP[id]].mount(elcWraps[id], demoSnap());
+    }
+    if (selectedContent === id) {
+      layoutElc(id);
+      requestAnimationFrame(function () { layoutElc(id); });
+    }
+  });
+}
+
 function renderThemes() {
   if (!themesEl) return;
-  themesEl.innerHTML = THEMES.map(t => `
-    <button class="theme${t.id === selectedTheme ? ' is-active' : ''}" data-theme="${t.id}">
-      <div class="swatch" style="background:${t.bg}">
-        <span class="bar" style="background:${t.fg};opacity:.85"></span>
-        <span class="bar" style="background:${t.up}"></span>
-        <span class="bar" style="background:${t.down}"></span>
-      </div>
-      <div class="name">${t.name}</div>
-      <div class="meta">${t.meta}</div>
-    </button>`).join('');
-
-  themesEl.querySelectorAll('.theme').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedTheme = btn.dataset.theme;
-      if (themesEl) renderThemes();
+  themesEl.innerHTML =
+    '<div class="theme-group"><div class="theme-group-label">Theme</div>' +
+      '<div class="theme-sub">Background</div><div class="theme-chips">' +
+        BG_THEMES.map(function (t) {
+          return '<button class="theme-chip' + (selectedBg === t.id ? ' selected' : '') + '" data-bg="' + t.id + '">' + t.name + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="theme-sub">Content</div><div class="theme-chips">' +
+        CONTENT_THEMES.map(function (t) {
+          return '<button class="theme-chip' + (selectedContent === t.id ? ' selected' : '') + '" data-content="' + t.id + '">' + t.name + '</button>';
+        }).join('') +
+      '</div>' +
+      '<div class="theme-preview-big">' +
+        '<div class="preview-bg"></div>' +
+        '<div class="preview-panel"><div class="mini-panel">' +
+          '<div class="mini-total">$22,362</div>' +
+          '<div class="mini-delta">+1.51% today</div>' +
+          '<div class="mini-row"><span>BTC</span><span>$91,069</span><span class="up">+1.96%</span></div>' +
+          '<div class="mini-row"><span>ETH</span><span>$3,137</span><span class="up">+1.20%</span></div>' +
+          '<div class="mini-row"><span>SOL</span><span>$187.46</span><span class="up">+5.05%</span></div>' +
+        '</div></div>' +
+        '<div class="preview-dash clear"></div>' +
+        '<div class="preview-elc" data-elc="focus"></div>' +
+        '<div class="preview-elc" data-elc="ledger"></div>' +
+        '<div class="preview-elc" data-elc="scale"></div>' +
+      '</div>' +
+    '</div>';
+  // The dashboard layer holds one 1280px-wide bento, scaled to fit.
+  var dash = themesEl.querySelector('.preview-dash');
+  dashWrap = document.createElement('div');
+  dashWrap.style.width = '1280px';
+  dashWrap.style.position = 'absolute';
+  dashWrap.style.transformOrigin = 'top left';
+  dash.appendChild(dashWrap);
+  // Each elegant layer holds one 1280x720 content, scaled to fit.
+  ELC_IDS.forEach(function (id) {
+    var layer = themesEl.querySelector('.preview-elc[data-elc="' + id + '"]');
+    var wrap = document.createElement('div');
+    wrap.style.width = '1280px';
+    wrap.style.height = '720px';
+    wrap.style.position = 'absolute';
+    wrap.style.transformOrigin = 'top left';
+    layer.appendChild(wrap);
+    elcWraps[id] = wrap;
+  });
+  mountPreviewBg(selectedBg);
+  showPreviewContent();
+  // Clicking a chip only moves the selection; Save persists it.
+  themesEl.querySelectorAll('[data-bg]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      selectedBg = chip.dataset.bg;
+      themesEl.querySelectorAll('[data-bg]').forEach(function (b) { b.classList.toggle('selected', b.dataset.bg === selectedBg); });
+      mountPreviewBg(selectedBg);
     });
   });
+  themesEl.querySelectorAll('[data-content]').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      selectedContent = chip.dataset.content;
+      themesEl.querySelectorAll('[data-content]').forEach(function (b) { b.classList.toggle('selected', b.dataset.content === selectedContent); });
+      showPreviewContent();
+    });
+  });
+}
+
+// Demo data for the dashboard preview (same shapes as the 21st.dev demo).
+function demoBentoData() {
+  const history = Array.from({ length: 36 }, (_, i) => {
+    const t = i / 35;
+    const d = new Date(2026, 9 - (35 - i), 1);
+    const noise = (Math.sin(i * 12.9898 + 156.466) * 43758.5453) % 1;
+    return {
+      date: d.toISOString(),
+      fiat: 14000 + t * 7000 + Math.sin(i * 0.9) * 900,
+      stocks: 12000 + t * 19000 + Math.sin(i * 0.55) * 1600 + noise * 800,
+      crypto: Math.max(2500, 4000 + t * 12000 + Math.sin(i * 0.8 + 1) * 3200 + Math.cos(i * 0.33) * 1400)
+    };
+  });
+  return {
+    history,
+    payments: [
+      { name: "Rent", date: "Nov 1", amount: 1800 },
+      { name: "Index fund · auto-buy", date: "Nov 3", amount: 500 },
+      { name: "Insurance", date: "Nov 9", amount: 96 }
+    ],
+    goals: [
+      { name: "House deposit", progress: 0.42, target: 60000 },
+      { name: "Japan, spring", progress: 0.76, target: 6000 }
+    ],
+    cashflow: {
+      months: ["May", "Jun", "Jul", "Aug", "Sep", "Oct"],
+      income: [[2.4, 3.6, 5.4, 6.4, 5.0, 3.4], [2.0, 3.0, 4.4, 5.2, 4.2, 2.8], [1.6, 2.4, 3.4, 4.0, 3.3, 2.2]],
+      spending: [[1.2, 2.2, 3.8, 4.6, 3.4, 1.8], [1.0, 1.8, 3.0, 3.8, 2.8, 1.5], [0.8, 1.4, 2.4, 3.0, 2.2, 1.2]]
+    },
+    crypto: [
+      { name: "Bitcoin", symbol: "BTC", share: 0.62, change: "+3.1%", ohlc: [[66.1, 67.0, 65.8, 66.8], [66.8, 67.6, 66.5, 67.4], [67.4, 67.9, 66.9, 67.1], [67.1, 68.2, 67.0, 68.0], [68.0, 68.9, 67.8, 68.7], [68.7, 69.1, 68.1, 68.4], [68.4, 69.6, 68.3, 69.4]] },
+      { name: "Ethereum", symbol: "ETH", share: 0.26, change: "−0.8%", ohlc: [[3.52, 3.58, 3.44, 3.47], [3.47, 3.55, 3.4, 3.53], [3.53, 3.56, 3.38, 3.41], [3.41, 3.5, 3.36, 3.48], [3.48, 3.51, 3.39, 3.43], [3.43, 3.49, 3.37, 3.46], [3.46, 3.52, 3.42, 3.44]] },
+      { name: "Solana", symbol: "SOL", share: 0.12, change: "+6.4%", ohlc: [[142, 149, 139, 147], [147, 151, 141, 143], [143, 156, 142, 154], [154, 158, 147, 149], [149, 162, 148, 160], [160, 166, 155, 157], [157, 171, 156, 168]] }
+    ],
+    stocks: { days: ["Mon", "Tue", "Wed", "Thu", "Fri"], values: [2.1, 1.2, 3.4, 1.9, 4.6] }
+  };
 }
 if (themesEl) renderThemes();
 
@@ -1014,7 +1280,7 @@ function saveSettings(e) {
     holdings,
     currency: document.getElementById('currency').value,
     refreshSeconds: Math.max(15, parseInt(document.getElementById('refresh').value, 10) || 60),
-    theme: selectedTheme,
+    theme: selectedBg + '-' + selectedContent,
     apiKey: apiKeyInput ? apiKeyInput.value.trim() : (state.apiKey || ''),
   };
 
@@ -1028,9 +1294,9 @@ function saveSettings(e) {
   } else {
     console.log('momo payload', payload);
   }
-}
 
   if (btn) setTimeout(() => { btn.textContent = originalText || 'Save'; }, 1200);
+}
 saveTopBtn.addEventListener('click', saveSettings);
 if (saveThemesBtn) saveThemesBtn.addEventListener('click', saveSettings);
 saveSettingsBtn.addEventListener('click', saveSettings);

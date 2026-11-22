@@ -16,6 +16,13 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/momo"
 cp skin.html "$APP/Contents/Resources/skin.html"
 cp settings.html "$APP/Contents/Resources/settings.html"
+cp chrome-arcs.js "$APP/Contents/Resources/chrome-arcs.js"
+cp anodized-ink.js "$APP/Contents/Resources/anodized-ink.js"
+cp finance-bento.js "$APP/Contents/Resources/finance-bento.js"
+cp elegant-contents.js "$APP/Contents/Resources/elegant-contents.js"
+cp holo-mosaic.js "$APP/Contents/Resources/holo-mosaic.js"
+cp laser-flow.js "$APP/Contents/Resources/laser-flow.js"
+cp plasma-wave.js "$APP/Contents/Resources/plasma-wave.js"
 cp assets/AppIcon.icns "$APP/Contents/Resources/Momo.icns"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'

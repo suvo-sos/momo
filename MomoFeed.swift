@@ -16,7 +16,7 @@ final class MomoSettings {
     var apiKey: String = ""
     var currency: String = "USD"
     var refreshSeconds: Double = 60
-    var theme: String = "midnight"
+    var theme: String = "aurora-panel"
     var holdings: [MomoHolding] = [
         MomoHolding(symbol: "BTC", amount: 0.12),
         MomoHolding(symbol: "ETH", amount: 1.4),
