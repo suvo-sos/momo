@@ -269,6 +269,11 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         settings.image = MomoApp.blankImage()
         menu.addItem(settings)
 
+        let reload = NSMenuItem(title: "Reload", action: #selector(reload), keyEquivalent: "r")
+        reload.target = self
+        reload.image = MomoApp.blankImage()
+        menu.addItem(reload)
+
         let quit = NSMenuItem(title: "Quit Momo", action: #selector(quit), keyEquivalent: "")
         quit.target = self
         quit.image = MomoApp.blankImage()
@@ -651,6 +656,12 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
     @objc private func quit() {
         launchctl("unload", MomoApp.agentPlist)
         NSApp.terminate(nil)
+    }
+
+    /// Reload now: fetch fresh quotes and push the snapshot to every wallpaper webview.
+    @objc private func reload() {
+        NSLog("Momo: manual reload requested")
+        feed.poll()
     }
 
     // MARK: - Login item
