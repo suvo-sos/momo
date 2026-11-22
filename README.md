@@ -37,11 +37,9 @@ Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track
 |---|---|
 | ![Ledger](docs/screenshots/ledger.png) | ![Scale](docs/screenshots/scale.png) |
 
-| Dashboard | Settings |
+| Dashboard | Minimal |
 |---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Settings](docs/screenshots/settings.png) |
-
-*Demo data.*
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Minimal](docs/screenshots/minimal.png) |
 
 ---
 
