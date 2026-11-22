@@ -11,9 +11,14 @@ A live macOS wallpaper that turns your crypto holdings into ambient light. Up, t
 **macOS 13+** — no build needed:
 
 <p align="center">
-  <a href="https://github.com/suvo-sos/momo/releases/latest">
+  <a href="https://github.com/suvo-sos/momo/releases/tag/v0.1.1">
     <img src="https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white" width="400" alt="Download Momo for Mac">
   </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/suvo-sos/momo/releases/download/v0.1.1/Momo.dmg">⬇️ Download Momo.dmg</a> ·
+  <a href="https://github.com/suvo-sos/momo/releases/download/v0.1.1/Momo.zip">⬇️ Download Momo.zip</a>
 </p>
 
 1. Open `Momo.dmg`, drag **Momo.app** into **Applications**, run it. A `▞` appears in your menu bar.
