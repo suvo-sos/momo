@@ -2,7 +2,7 @@
 
 > Your portfolio, on your desktop.
 
-Your portfolio is your wallpaper. Green when you're up, red when you're down. No app to open.
+An aesthetic wallpaper that tells you your portfolio status. Green when you're up, red when you're down.
 
 ![Momo — Scale on Laser Flow](docs/screenshots/cover.png)
 
