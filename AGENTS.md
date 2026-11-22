@@ -54,6 +54,11 @@ Three hard reasons:
    `pro-api.coinmarketcap.com` is blocked — the API sends no CORS headers.
 2. **Key safety.** A `.dmg` is unzipped and inspected; an API key in page source
    is a published key. The hackathon rules also score committed keys against you.
+   The built-in key is baked into the binary obfuscated at build time
+   (`build.sh` → `BuiltinKey.swift`, gitignored) and never shown in Settings;
+   the user can add their own key there if the built-in one runs out of credits.
+   Obfuscation hides it from the UI, `settings.json` and `strings` — a determined
+   person can still pull a key out of any shipped app; true hiding needs a server.
 3. **Caching and rate discipline.** One poller in Swift means one request per
    interval no matter how many displays are open.
 
@@ -185,8 +190,10 @@ Gotchas learned the hard way:
   the menu sets `autoenablesItems = false` and enables the brand item by hand.
 - macOS decorates a `⌘,` "preferences" item with a gear, so Settings has no key
   equivalent.
-- The API key is read from `settings.json`, then `$CMC_API_KEY`, then
-  `~/momo/.env`. It is gitignored and must never enter the bundle.
+- Key precedence: the user's own key from Settings (`customApiKey` in
+  `settings.json`), then the built-in key baked in at build time, then
+  `$CMC_API_KEY` / `~/momo/.env` (dev fallback). The built-in key is generated
+  by `build.sh` from the local key and never enters the repo or `settings.json`.
 - Not sandboxed: `allowingReadAccessTo:` is needed for the local page and the
   key file path.
 

@@ -9,14 +9,14 @@
 (function () {
   "use strict";
 
-  var CSS = `.fpb{font-family:Geist,ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#fff;width:100%}
+  var CSS = `.fpb{font-family:Geist,ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#fff;width:100%;max-width:1380px;margin:0 auto}
 .fpb *{box-sizing:border-box}
-.fpb .fpb-c{border-radius:28px}
+.fpb .fpb-c{border-radius:24px}
 .fpb .vbrow{display:flex;justify-content:flex-end;margin-top:16px}
 .fpb{--acc:#E8FF1F;--t1:#fff;--t2:rgba(255,255,255,.56);--t3:rgba(255,255,255,.38);--hair:rgba(255,255,255,.14);--ease:cubic-bezier(.32,.72,0,1);
     --fiat:#FFFFFF;--stocks:#A9B2FF;--crypto:#FFB37A}
 .fpb *{box-sizing:border-box}
-.fpb .fpb-c{position:relative;padding:20px 22px 22px;background:#000;color:#fff}
+.fpb .fpb-c{position:relative;padding:20px 22px 22px;background:rgba(10,12,16,.55);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08);color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .fpb .top{display:flex;align-items:center;gap:14px;height:44px;margin-bottom:16px}
 .fpb .top h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em;flex:1}
 .fpb .top h1 span{font-weight:500;color:var(--t3);font-size:15px;letter-spacing:-.01em;margin-left:12px}
@@ -56,7 +56,7 @@
 .fpb #crypto,.fpb #stocks{grid-column:span 12}
 .fpb .grid{gap:12px}}
 @media (max-width:520px){.fpb .kpi{grid-column:span 12}}
-.fpb .card{position:relative;border-radius:28px;overflow:hidden;opacity:0;transform:translateY(14px) scale(.985);transition:opacity .7s ease,transform .9s var(--ease)}
+.fpb .card{position:relative;border-radius:24px;overflow:hidden;opacity:0;transform:translateY(14px) scale(.985);transition:opacity .7s ease,transform .9s var(--ease);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .fpb .in .card{opacity:1;transform:none}
 .fpb .card .rim{position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none;z-index:9}
 .fpb .g{position:absolute;inset:0}
@@ -175,6 +175,8 @@
     "9": ["01110", "10001", "10001", "01111", "00001", "00010", "01100"],
     "$": ["00100", "01111", "10100", "01110", "00101", "11110", "00100"],
     "€": ["00111", "01000", "11110", "01000", "11110", "01000", "00111"],
+    "£": ["00110", "01001", "01000", "11100", "01000", "01000", "11111"],
+    "₹": ["11111", "01010", "11111", "00100", "00100", "00100", "00100"],
     ",": ["0", "0", "0", "0", "0", "1", "1"],
     " ": ["00", "00", "00", "00", "00", "00", "00"]
   };
@@ -227,7 +229,7 @@
 
     /* ---------- state ---------- */
     var S = { period: "1Y", ccy: "USD" };
-    var RATE = { USD: 1, EUR: 0.92 }, SYM = { USD: "$", EUR: "€" };
+    var RATE = { USD: 1, EUR: 0.92, GBP: 0.79, INR: 83.5 }, SYM = { USD: "$", EUR: "€", GBP: "£", INR: "₹" };
     function money(v, o) {
       o = o || {};
       var dec = o.dec || 0;
@@ -575,7 +577,7 @@
       per.innerHTML = ["1W", "1M", "3M", "1Y", "All"].map(function (p) {
         return '<button type="button" aria-pressed="' + (S.period === p) + '">' + p + '</button>';
       }).join("");
-      ccy.innerHTML = ["USD", "EUR"].map(function (c) {
+      ccy.innerHTML = ["USD", "EUR", "GBP", "INR"].map(function (c) {
         return '<button type="button" aria-pressed="' + (S.ccy === c) + '">' + c + '</button>';
       }).join("");
       per.querySelectorAll("button").forEach(function (b) {

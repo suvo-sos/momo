@@ -13,10 +13,43 @@ struct MomoHolding {
 }
 
 final class MomoSettings {
-    var apiKey: String = ""
+    /// The user's own key, typed in Settings. Empty means "use Momo's built-in key".
+    var customApiKey: String = ""
+    /// Last key from the old settings.json `apiKey` field. Dev fallback only:
+    /// never shown in the UI, never written back to disk.
+    var legacyApiKey: String = ""
+    /// Key from $CMC_API_KEY / ~/momo/.env (dev machines). Never the built-in key.
+    var devApiKey: String = ""
+    /// Built-in key state, from the last CMC response: ok / exhausted / invalid / missing.
+    var keyStatus: String = "ok"
     var currency: String = "USD"
+
+    /// The key actually sent to CMC: the user's own key first, then the
+    /// built-in key baked in at build time, then local dev sources.
+    var activeKey: String {
+        if !customApiKey.isEmpty { return customApiKey }
+        if !BuiltinKey.value.isEmpty { return BuiltinKey.value }
+        if !devApiKey.isEmpty { return devApiKey }
+        return legacyApiKey
+    }
+
+    var keySource: String {
+        if !customApiKey.isEmpty { return "custom" }
+        if !BuiltinKey.value.isEmpty { return "builtin" }
+        if !devApiKey.isEmpty || !legacyApiKey.isEmpty { return "local" }
+        return "none"
+    }
+
+    /// Last 4 chars of the user's own key only, for a masked display.
+    /// The built-in key is never shown, not even masked.
+    var customKeyLast4: String {
+        customApiKey.isEmpty ? "" : String(customApiKey.suffix(4))
+    }
     var refreshSeconds: Double = 60
     var theme: String = "aurora-panel"
+    var customBgs: [[String: String]] = [] // [{id, path, type, name}]
+    var activeCustomBg: String = ""
+    var launchAtLogin: Bool = true
     var holdings: [MomoHolding] = [
         MomoHolding(symbol: "BTC", amount: 0.12),
         MomoHolding(symbol: "ETH", amount: 1.4),
@@ -31,16 +64,31 @@ final class MomoSettings {
     ]
 
     static let path = NSHomeDirectory() + "/Library/Application Support/Momo/settings.json"
+    static let backgroundsDir = NSHomeDirectory() + "/Library/Application Support/Momo/backgrounds"
 
     func load() {
         guard let data = try? Data(contentsOf: URL(fileURLWithPath: MomoSettings.path)),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return }
 
-        if let k = obj["apiKey"] as? String, !k.isEmpty { apiKey = k }
+        if let k = obj["customApiKey"] as? String { customApiKey = k }
+        if let k = obj["apiKey"] as? String, !k.isEmpty { legacyApiKey = k }
         if let c = obj["currency"] as? String, !c.isEmpty { currency = c }
         if let r = obj["refreshSeconds"] as? Double, r >= 15 { refreshSeconds = r }
         if let t = obj["theme"] as? String, !t.isEmpty { theme = t }
+        if let l = obj["launchAtLogin"] as? Bool { launchAtLogin = l }
+        if let bgs = obj["customBgs"] as? [[String: Any]] {
+            customBgs = bgs.compactMap { b in
+                guard let id = b["id"] as? String, let path = b["path"] as? String else { return nil }
+                return [
+                    "id": id,
+                    "path": path,
+                    "type": (b["type"] as? String) ?? "image",
+                    "name": (b["name"] as? String) ?? "Custom",
+                ]
+            }
+        }
+        if let a = obj["activeCustomBg"] as? String { activeCustomBg = a }
         if let hs = obj["holdings"] as? [[String: Any]] {
             let parsed = hs.compactMap { h -> MomoHolding? in
                 guard let s = h["symbol"] as? String, let a = (h["amount"] as? NSNumber)?.doubleValue ?? (h["amount"] as? Double) else { return nil }
@@ -49,25 +97,31 @@ final class MomoSettings {
             if !parsed.isEmpty { holdings = parsed }
         }
 
-        // Key can also come from the environment or the local .env, so the
-        // repo never holds it.
-        if apiKey.isEmpty {
-            if let env = ProcessInfo.processInfo.environment["CMC_API_KEY"], !env.isEmpty {
-                apiKey = env
-            } else if let dotenv = try? String(contentsOfFile: NSHomeDirectory() + "/momo/.env", encoding: .utf8) {
-                for line in dotenv.split(separator: "\n") where line.hasPrefix("CMC_API_KEY=") {
-                    apiKey = String(line.dropFirst("CMC_API_KEY=".count)).trimmingCharacters(in: .whitespaces)
-                }
+        // Dev fallback: $CMC_API_KEY or ~/momo/.env. Only used when there is
+        // no custom key and no built-in key was baked in at build time.
+        if let env = ProcessInfo.processInfo.environment["CMC_API_KEY"], !env.isEmpty {
+            devApiKey = env
+        } else if let dotenv = try? String(contentsOfFile: NSHomeDirectory() + "/momo/.env", encoding: .utf8) {
+            for line in dotenv.split(separator: "\n") where line.hasPrefix("CMC_API_KEY=") {
+                devApiKey = String(line.dropFirst("CMC_API_KEY=".count)).trimmingCharacters(in: .whitespaces)
             }
         }
     }
 
     func save() {
+        let dir = URL(fileURLWithPath: MomoSettings.path).deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let obj: [String: Any] = [
-            "apiKey": apiKey,
+            // The built-in key is never written here, and the legacy `apiKey`
+            // field is dropped on the next save, so the key stops living
+            // in a plain-text file on the user's Mac.
+            "customApiKey": customApiKey,
             "currency": currency,
             "refreshSeconds": refreshSeconds,
             "theme": theme,
+            "customBgs": customBgs,
+            "activeCustomBg": activeCustomBg,
+            "launchAtLogin": launchAtLogin,
             "holdings": holdings.map { ["symbol": $0.symbol, "amount": $0.amount] },
         ]
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted]) {
@@ -123,7 +177,9 @@ final class MomoFeed {
     func fetchQuotes(symbols: [String], currency: String, completion: @escaping ([String: [String: Any]]?, String?) -> Void) {
         let cleanSymbols = Array(Set(symbols.map { $0.trimmingCharacters(in: .whitespaces).uppercased() })).filter { !$0.isEmpty }
         guard !cleanSymbols.isEmpty else { completion(nil, nil); return }
-        guard !settings.apiKey.isEmpty else {
+        let key = settings.activeKey
+        guard !key.isEmpty else {
+            settings.keyStatus = "missing"
             NSLog("Momo: no API key configured")
             completion(nil, nil)
             return
@@ -136,7 +192,7 @@ final class MomoFeed {
         ]
 
         var req = URLRequest(url: comps.url!)
-        req.setValue(settings.apiKey, forHTTPHeaderField: "X-CMC_PRO_API_KEY")
+        req.setValue(key, forHTTPHeaderField: "X-CMC_PRO_API_KEY")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         req.timeoutInterval = 20
 
@@ -151,13 +207,35 @@ final class MomoFeed {
                 DispatchQueue.main.async { completion(nil, nil) }
                 return
             }
-            guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let payload = root["data"] as? [String: Any]
+            guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             else {
                 NSLog("Momo: could not parse response")
                 DispatchQueue.main.async { completion(nil, nil) }
                 return
             }
+            // CMC reports key problems in `status`, with no data payload.
+            // This is how Settings learns the built-in key ran out of credits.
+            if let status = root["status"] as? [String: Any],
+               let code = (status["error_code"] as? NSNumber)?.intValue ?? (status["error_code"] as? Int),
+               code != 0 {
+                let msg = (status["error_message"] as? String ?? "").lowercased()
+                if msg.contains("credit") || code == 1007 {
+                    self.settings.keyStatus = "exhausted"
+                } else if code == 1001 || code == 1002 {
+                    self.settings.keyStatus = "invalid"
+                } else {
+                    self.settings.keyStatus = "error"
+                }
+                NSLog("Momo: CMC key error \(code): \(status["error_message"] as? String ?? "")")
+                DispatchQueue.main.async { completion(nil, nil) }
+                return
+            }
+            guard let payload = root["data"] as? [String: Any] else {
+                NSLog("Momo: could not parse response")
+                DispatchQueue.main.async { completion(nil, nil) }
+                return
+            }
+            self.settings.keyStatus = "ok"
 
             var pricesMap: [String: [String: Any]] = [:]
             for sym in cleanSymbols {
@@ -219,11 +297,16 @@ final class MomoFeed {
             // value 24h ago, so the total's percentage is weighted by holdings
             prevValue += (price / (1 + pct)) * h.amount
 
-            coins.append([
+            var coin: [String: Any] = [
                 "symbol": h.symbol,
                 "price": price,
                 "change24h": pct,
-            ])
+                "amount": h.amount,
+            ]
+            if let id = (entry["id"] as? NSNumber)?.intValue ?? (entry["id"] as? Int) {
+                coin["logo"] = "https://s2.coinmarketcap.com/static/img/coins/64x64/\(id).png"
+            }
+            coins.append(coin)
         }
 
         guard value > 0 else { return nil }
@@ -271,14 +354,15 @@ final class MomoFeed {
     }
 
     private func fetchListings(currency: String, completion: @escaping ([[String: Any]]) -> Void) {
-        guard !settings.apiKey.isEmpty else { completion([]); return }
+        let key = settings.activeKey
+        guard !key.isEmpty else { completion([]); return }
         var comps = URLComponents(string: "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest")!
         comps.queryItems = [
             URLQueryItem(name: "limit", value: "200"),
             URLQueryItem(name: "convert", value: currency),
         ]
         var req = URLRequest(url: comps.url!)
-        req.setValue(settings.apiKey, forHTTPHeaderField: "X-CMC_PRO_API_KEY")
+        req.setValue(key, forHTTPHeaderField: "X-CMC_PRO_API_KEY")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         req.timeoutInterval = 20
         URLSession.shared.dataTask(with: req) { data, _, err in
@@ -286,6 +370,18 @@ final class MomoFeed {
             guard let data = data else { NSLog("Momo: listings no data"); DispatchQueue.main.async { completion([]) }; return }
             guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                 NSLog("Momo: listings parse root failed: \(String(data: data, encoding: .utf8)?.prefix(200) ?? "")")
+                DispatchQueue.main.async { completion([]) }; return
+            }
+            if let status = root["status"] as? [String: Any],
+               let code = (status["error_code"] as? NSNumber)?.intValue ?? (status["error_code"] as? Int),
+               code != 0 {
+                let msg = (status["error_message"] as? String ?? "").lowercased()
+                if msg.contains("credit") || code == 1007 {
+                    self.settings.keyStatus = "exhausted"
+                } else if code == 1001 || code == 1002 {
+                    self.settings.keyStatus = "invalid"
+                }
+                NSLog("Momo: listings CMC key error \(code)")
                 DispatchQueue.main.async { completion([]) }; return
             }
             guard let arr = root["data"] as? [[String: Any]] else {

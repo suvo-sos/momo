@@ -4,56 +4,56 @@
 <meta charset="utf-8">
 <title>Momo</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; overflow: hidden; }
 
-  /* Themes. Pick one in Settings > Themes; the host sets data-theme before
-     the first paint, so there is no flash of the wrong world. */
   :root {
     --bg: #0d0f11;
     --fg: #ffffff;
-    --fg-strong: rgba(255,255,255,.92);
-    --fg-dim: rgba(255,255,255,.38);
-    --fg-mute: rgba(255,255,255,.42);
-    --hair: rgba(255,255,255,.08);
-    --hair-soft: rgba(255,255,255,.045);
-    --foot: rgba(255,255,255,.2);
+    --fg-strong: rgba(255,255,255,.94);
+    --fg-dim: rgba(255,255,255,.45);
+    --fg-mute: rgba(255,255,255,.48);
+    --hair: rgba(255,255,255,.09);
+    --hair-soft: rgba(255,255,255,.05);
+    --foot: rgba(255,255,255,.24);
     --up: #6fd39a;
     --down: #e8735f;
   }
-  :root[data-theme="slate"] {
+  :root[data-theme*="slate"] {
     --bg: #12171c;
     --fg: #eaf0f5;
     --fg-strong: #f4f8fb;
-    --fg-dim: rgba(234,240,245,.42);
-    --fg-mute: rgba(234,240,245,.5);
-    --hair: rgba(234,240,245,.1);
+    --fg-dim: rgba(234,240,245,.45);
+    --fg-mute: rgba(234,240,245,.52);
+    --hair: rgba(234,240,245,.11);
     --hair-soft: rgba(234,240,245,.06);
-    --foot: rgba(234,240,245,.26);
+    --foot: rgba(234,240,245,.28);
     --up: #5fd3a6;
     --down: #ff8f7a;
   }
-  :root[data-theme="paper"] {
+  :root[data-theme*="paper"] {
     --bg: #f4f1ea;
     --fg: #1c1b18;
     --fg-strong: #14130f;
-    --fg-dim: rgba(28,27,24,.46);
-    --fg-mute: rgba(28,27,24,.52);
+    --fg-dim: rgba(28,27,24,.48);
+    --fg-mute: rgba(28,27,24,.54);
     --hair: rgba(0,0,0,.12);
     --hair-soft: rgba(0,0,0,.07);
-    --foot: rgba(28,27,24,.34);
+    --foot: rgba(28,27,24,.36);
     --up: #1f7a4d;
     --down: #b0432f;
   }
-  :root[data-theme="ember"] {
+  :root[data-theme*="ember"] {
     --bg: #140d0a;
     --fg: #ffe9dc;
     --fg-strong: #ffd9c4;
-    --fg-dim: rgba(255,233,220,.44);
-    --fg-mute: rgba(255,233,220,.52);
-    --hair: rgba(255,233,220,.12);
-    --hair-soft: rgba(255,233,220,.06);
-    --foot: rgba(255,233,220,.28);
+    --fg-dim: rgba(255,233,220,.46);
+    --fg-mute: rgba(255,233,220,.54);
+    --hair: rgba(255,233,220,.13);
+    --hair-soft: rgba(255,233,220,.07);
+    --foot: rgba(255,233,220,.3);
     --up: #f5b23c;
     --down: #ff7a5c;
   }
@@ -65,151 +65,259 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /* Single full-screen container for the active WebGL background */
+  #bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  #bg-layer .bg-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Module content (the dashboard) for the Bento dashboard content style. */
+  #content {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #000;
+    padding: 40px 48px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,.18) transparent;
+  }
+  #content::-webkit-scrollbar { width: 6px; }
+  #content::-webkit-scrollbar-track { background: transparent; }
+  #content::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 3px; }
+  #content.on { display: block; }
+  #content.clear { background: transparent; }
+  #content.clear .fpb .fpb-c {
+    background: rgba(10, 12, 16, 0.45);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Elegant contents: Focus, Ledger, Scale. Transparent so the background shows through. */
+  #focus, #ledger, #scale {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    pointer-events: none;
+  }
+  #focus.on, #ledger.on, #scale.on { display: block; }
+
+  /* Minimal wallpaper panel */
   .panel {
     position: fixed;
     left: 64px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 340px;
-    z-index: 1;
+    top: 56px;
+    z-index: 2;
+    pointer-events: none;
+    text-align: left;
   }
-
-  /* Chrome Arcs background for the first theme (aurora). Hidden otherwise. */
-  #arcs { position: fixed; inset: 0; z-index: 0; display: none; }
-  #arcs.on { display: block; }
-  /* Anodized Ink background for the second theme (embers). Hidden otherwise. */
-  #ink { position: fixed; inset: 0; z-index: 0; display: none; }
-  #ink.on { display: block; }
-  /* Holo Mosaic background for the third theme (holo). Hidden otherwise. */
-  #holo { position: fixed; inset: 0; z-index: 0; display: none; }
-  #holo.on { display: block; }
-  /* Laser Flow background for the fourth theme (laser). Hidden otherwise. */
-  #laser { position: fixed; inset: 0; z-index: 0; display: none; }
-  #laser.on { display: block; }
-  /* Plasma Wave background for the fifth theme (plasma). Hidden otherwise. */
-  #plasma { position: fixed; inset: 0; z-index: 0; display: none; }
-  #plasma.on { display: block; }
-  /* Module content (the dashboard) for every content style except the
-     minimal panel. Replaces the panel. With a background active it goes
-     clear, so the bg shows through the gaps. */
-  #content { position: fixed; inset: 0; z-index: 0; display: none; overflow: auto; background: #000; padding: 24px; }
-  #content.on { display: block; }
-  #content.clear { background: transparent; }
-  #content.clear .fpb .fpb-c { background: transparent; }
-  body.show-content .panel { display: none; }
-  /* Elegant contents: Focus, Ledger, Scale. Transparent like the clear
-     dashboard, so the background shows through. */
-  #focus, #ledger, #scale { position: fixed; inset: 0; z-index: 0; display: none; }
-  #focus.on, #ledger.on, #scale.on { display: block; }
-  body.show-elc .panel { display: none; }
-
-  /* total */
-  .total { margin-bottom: 28px; }
   .total .value {
-    font-size: 30px;
-    font-weight: 300;
-    letter-spacing: -0.015em;
+    font-size: 72px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
+    line-height: 0.95;
+    color: var(--fg-strong);
+    font-family: "Space Grotesk", "Work Sans", -apple-system, sans-serif;
+    text-shadow: 0 2px 24px rgba(0,0,0,.35);
   }
   .total .delta {
-    margin-top: 7px;
-    font-size: 12px;
-    font-weight: 500;
+    margin-top: 12px;
+    font-size: 16px;
+    font-weight: 600;
     letter-spacing: 0.02em;
     color: var(--fg-mute);
     font-variant-numeric: tabular-nums;
+    font-family: "Space Grotesk", "Work Sans", -apple-system, sans-serif;
   }
   .total .delta.up   { color: var(--up); }
   .total .delta.down { color: var(--down); }
 
-  .rule {
-    height: 1px;
-    background: var(--hair);
-    margin-bottom: 6px;
-  }
-
-  /* ten tokens */
-  .list { display: flex; flex-direction: column; }
-  .panel .row {
-    display: grid;
-    grid-template-columns: 64px 1fr auto;
-    align-items: baseline;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--hair-soft);
-    font-variant-numeric: tabular-nums;
-  }
-  .panel .row:last-child { border-bottom: none; }
-
-  .sym {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    color: var(--fg-strong);
-  }
-  .price {
-    font-size: 12px;
-    color: var(--fg-dim);
-    letter-spacing: 0.01em;
-  }
-  .chg {
-    font-size: 12px;
-    font-weight: 500;
-    text-align: right;
-    min-width: 62px;
-    color: var(--fg-mute);
-  }
-  .chg.up   { color: var(--up); }
-  .chg.down { color: var(--down); }
-
   .foot {
-    margin-top: 22px;
-    font-size: 10px;
-    letter-spacing: 0.14em;
+    position: fixed;
+    left: 64px;
+    bottom: 36px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--foot);
+    z-index: 2;
+    pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Coin marquee ticker at bottom */
+  .coin-marquee {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 76px;
+    overflow: hidden;
+    padding: 14px 0;
+    mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+    z-index: 2;
+    pointer-events: none;
+  }
+  .coin-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    will-change: transform;
+  }
+  .coin-half {
+    display: flex;
+    align-items: center;
+  }
+  .coin-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-variant-numeric: tabular-nums;
+    font-size: 16px;
+    white-space: nowrap;
+    padding: 10px 20px;
+    margin-right: 1.25rem;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    background: rgba(12, 14, 18, 0.55);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: border-color .2s, background .2s;
+  }
+  .coin-chip .logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .coin-chip .icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--fg-strong);
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--fg-strong);
+    background: rgba(255,255,255,0.06);
+  }
+  .coin-chip .sym {
+    font-weight: 700;
+    color: var(--fg-strong);
+    letter-spacing: 0.02em;
+  }
+  .coin-chip .amt {
+    color: var(--fg-dim);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  .coin-chip .chg {
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 2px;
+  }
+  .coin-chip .chg.up   { color: var(--up); }
+  .coin-chip .chg.down { color: var(--down); }
+
+  /* The minimal style is the only one that shows the panel, ticker and foot.
+     Every other content style hides all of them. */
+  body:not(.is-minimal) .panel,
+  body:not(.is-minimal) .foot,
+  body:not(.is-minimal) .coin-marquee {
+    display: none !important;
   }
 </style>
 </head>
 <body>
-<div id="arcs"></div>
-<div id="ink"></div>
-<div id="holo"></div>
-<div id="laser"></div>
-<div id="plasma"></div>
+<div id="bg-layer"></div>
 <div id="content"></div>
 <div id="focus"></div>
 <div id="ledger"></div>
 <div id="scale"></div>
-<div class="panel">
+
+<div class="panel" id="panel">
   <div class="total">
     <div class="value" id="total">—</div>
     <div class="delta" id="delta">—</div>
   </div>
-  <div class="rule"></div>
-  <div class="list" id="list"></div>
-  <div class="foot" id="foot">momo · demo</div>
+</div>
+<div class="foot" id="foot">momo · demo</div>
+
+<div class="coin-marquee" id="coin-marquee">
+  <div class="coin-track" id="coin-track"></div>
 </div>
 
 <script src="chrome-arcs.js"></script>
 <script src="anodized-ink.js"></script>
-<script src="holo-mosaic.js"></script>
 <script src="laser-flow.js"></script>
 <script src="plasma-wave.js"></script>
 <script src="finance-bento.js"></script>
 <script src="elegant-contents.js"></script>
 <script>
-// Momo — main theme.
-// One portfolio total, ten holdings. Nothing else on the desktop.
-//
+// Momo — live wallpaper.
 // Host API:  window.Momo.update({ portfolio, coins, at, currency })
-//            portfolio = { value, change24h, currency }
-//            coins     = [{ symbol, price, change24h }]   (max 10)
+//            window.Momo.setTheme(themeString)
 
 const MAX_ROWS = 10;
 const elTotal = document.getElementById('total');
 const elDelta = document.getElementById('delta');
-const elList  = document.getElementById('list');
 const elFoot  = document.getElementById('foot');
+
+// Animated total counter: ticks from the previous value to the new one.
+let totalAnimRaf = 0;
+let totalAnimCurrent = null;
+const TOTAL_DUR = 700;
+function animateTotal(target, cur) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    totalAnimCurrent = target;
+    elTotal.textContent = money(target, cur);
+    return;
+  }
+  const from = (totalAnimCurrent != null) ? totalAnimCurrent : target;
+  if (Math.abs(from - target) < 0.005) {
+    totalAnimCurrent = target;
+    elTotal.textContent = money(target, cur);
+    return;
+  }
+  if (totalAnimRaf) cancelAnimationFrame(totalAnimRaf);
+  const start0 = performance.now();
+  function frame(ts) {
+    const elapsed = ts - start0;
+    const progress = Math.min(elapsed / TOTAL_DUR, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const val = from + (target - from) * eased;
+    totalAnimCurrent = val;
+    elTotal.textContent = money(val, cur);
+    if (progress < 1) {
+      totalAnimRaf = requestAnimationFrame(frame);
+    } else {
+      totalAnimCurrent = target;
+      elTotal.textContent = money(target, cur);
+      totalAnimRaf = 0;
+    }
+  }
+  totalAnimRaf = requestAnimationFrame(frame);
+}
 
 const CUR_SYM = { USD: '$', EUR: '€', INR: '₹', GBP: '£', JPY: '¥' };
 
@@ -239,25 +347,6 @@ function classFor(v) {
   return v > 0 ? 'up' : 'down';
 }
 
-let last = null;
-let arcsMounted = false;
-let inkHandle = null;
-let currentInkHex = '#d1001c'; // crimson until the first snapshot arrives
-let holoHandle = null;
-let laserHandle = null;
-let plasmaHandle = null;
-let bentoHistory = null;
-let contentHandle = null;
-let contentId = null;
-let elcHandles = {}; // focus | ledger | scale -> { update, destroy }
-let currentContent = 'panel';
-
-function elcData(snap) {
-  return snap || null;
-}
-
-// The ink reads the market: strong growth dark green, little up light green,
-// little down light red, bigger drop cherry red. Boundaries are ±2% a day.
 function inkColorFor(change) {
   if (change >= 0.02) return '#0b6e2f';
   if (change >= 0)    return '#4ade80';
@@ -265,12 +354,116 @@ function inkColorFor(change) {
   return '#d1001c';
 }
 
-// ---- Finance Bento data ----
-// The crypto rows are live (real prices and 24h changes from the snapshot).
-// History, payments, goals, cash flow and stocks are demo shapes — the
-// snapshot has no 36 months of balances, no bank data and no stocks —
-// until a real source exists for them. The history's last point is always
-// the real portfolio total.
+const COIN_ICONS = { BTC: 1, ETH: 1027, SOL: 5426, BNB: 1839, XRP: 52, DOGE: 74, ADA: 2010, AVAX: 5805, LINK: 1975, TON: 11419 };
+
+// Demo fallback data
+function getDemoData() {
+  const base = [
+    ['BTC', 91204, 0.0214], ['ETH', 3142.55, 0.0142], ['SOL', 187.9, 0.0531],
+    ['BNB', 612.4, -0.0068], ['XRP', 2.134, 0.0121], ['DOGE', 0.3821, -0.0243],
+    ['ADA', 0.9182, 0.0087], ['AVAX', 38.62, -0.0155], ['LINK', 22.41, 0.0342],
+    ['TON', 5.182, 0.0041],
+  ];
+  const holdings = [0.12, 1.4, 9.5, 0.8, 320, 2400, 900, 22, 40, 120];
+  const coins = base.map(([symbol, px, chg], i) => ({
+    symbol,
+    price: px,
+    change24h: chg,
+    amount: holdings[i],
+    logo: COIN_ICONS[symbol] ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${COIN_ICONS[symbol]}.png` : ''
+  }));
+  const value = coins.reduce((s, c, i) => s + c.price * holdings[i], 0);
+  const prev = coins.reduce((s, c, i) => s + (c.price / (1 + c.change24h)) * holdings[i], 0);
+  return {
+    portfolio: { value, change24h: (value - prev) / prev, currency: 'USD' },
+    coins,
+    at: Date.now(),
+  };
+}
+
+let last = null;
+function getData() {
+  return last || getDemoData();
+}
+
+// Background management: exactly one WebGL canvas runs at a time
+let currentBg = null;
+let currentBgHandle = null;
+let currentInkHex = '#d1001c';
+let customBgConfig = { activeId: '', items: [] };
+let lastMouseInside = false;
+
+function activeCustomBg() {
+  const id = customBgConfig.activeId;
+  return (customBgConfig.items || []).find(b => b.id === id) || (customBgConfig.items || [])[0] || null;
+}
+
+function destroyBg() {
+  if (currentBgHandle) {
+    try {
+      if (typeof currentBgHandle === 'function') currentBgHandle();
+      else if (currentBgHandle.destroy) currentBgHandle.destroy();
+    } catch (e) {
+      console.warn('Error destroying bg', e);
+    }
+    currentBgHandle = null;
+  }
+  currentBg = null;
+  const bgLayer = document.getElementById('bg-layer');
+  if (bgLayer) bgLayer.innerHTML = '';
+}
+
+function setBackground(bg, force) {
+  if (!force && currentBg === bg && currentBgHandle) return;
+  destroyBg();
+  const bgLayer = document.getElementById('bg-layer');
+  if (!bgLayer) return;
+  currentBg = bg;
+
+  if (bg === 'aurora' && window.ChromeArcs) {
+    currentBgHandle = window.ChromeArcs.mount(bgLayer, { speed: 1, rings: 1, interactive: true });
+  } else if (bg === 'embers' && window.AnodizedInk) {
+    currentBgHandle = window.AnodizedInk.mount(bgLayer, { preset: 'crimson', colors: { ink: currentInkHex }, interactive: true });
+  } else if (bg === 'laser' && window.LaserFlow) {
+    currentBgHandle = window.LaserFlow.mount(bgLayer, { mouseInteraction: true });
+  } else if (bg === 'plasma' && window.PlasmaWave) {
+    currentBgHandle = window.PlasmaWave.mount(bgLayer, { mouseInteraction: true });
+  } else if (bg === 'custom') {
+    const item = activeCustomBg();
+    if (item && item.path) {
+      const src = item.path.startsWith('file://') ? item.path : 'file://' + item.path.split('/').map(encodeURIComponent).join('/');
+      if (item.type === 'video') {
+        const v = document.createElement('video');
+        v.className = 'bg-media';
+        v.src = src;
+        v.autoplay = true;
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');
+        v.setAttribute('muted', '');
+        bgLayer.appendChild(v);
+        v.play().catch(() => {});
+        currentBgHandle = { destroy() { v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } };
+      } else {
+        const img = document.createElement('img');
+        img.className = 'bg-media';
+        img.src = src;
+        img.alt = '';
+        bgLayer.appendChild(img);
+        currentBgHandle = { destroy() { img.remove(); } };
+      }
+    }
+  }
+}
+
+// Content management
+let currentContent = 'panel';
+let contentHandle = null;
+let elcHandles = {};
+const ELC_MAP = { focus: 'Focus', ledger: 'Ledger', scale: 'Scale' };
+
+// Finance Bento data generator
 const BENTO_DEMO = {
   payments: [
     { name: "Rent", date: "Nov 1", amount: 1800 },
@@ -294,9 +487,8 @@ const BENTO_DEMO = {
   stocks: { days: ["Mon", "Tue", "Wed", "Thu", "Fri"], values: [2.1, 1.2, 3.4, 1.9, 4.6] }
 };
 
+let bentoHistory = null;
 function buildBentoHistory(totalNow) {
-  // 36 month-end balances. Crypto grows into the real total; fiat/stocks are
-  // demo trajectories. Seeded wobble so the shape is stable across polls.
   const out = [];
   const now = new Date();
   for (let i = 0; i < 36; i++) {
@@ -343,9 +535,10 @@ function buildBentoCrypto(coins) {
 function buildBentoData(snap) {
   const totalNow = snap ? snap.portfolio.value : 22400;
   if (!bentoHistory) bentoHistory = buildBentoHistory(totalNow);
-  else bentoHistory[35].crypto = totalNow; // keep the last point real
+  else bentoHistory[35].crypto = totalNow;
   return {
     history: bentoHistory,
+    netWorth: snap ? snap.portfolio.value : 22400,
     payments: BENTO_DEMO.payments,
     goals: BENTO_DEMO.goals,
     cashflow: BENTO_DEMO.cashflow,
@@ -360,195 +553,169 @@ function bentoSubtitle(snap) {
   return "Updated today, " + t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
-function render() {
-  if (!last) return;
-  const cur = last.portfolio.currency || 'USD';
-  const p = last.portfolio;
+function setContent(content, bg) {
+  currentContent = content;
+  const isPanel = content === 'panel';
+  const isDashboard = content === 'dashboard';
+  const isElc = content === 'focus' || content === 'ledger' || content === 'scale';
 
-  // Re-tint the ink to the market on every snapshot.
-  currentInkHex = inkColorFor(p.change24h);
-  if (inkHandle) inkHandle.update({ colors: { ink: currentInkHex } });
-  // Keep the module content live too.
-  if (contentHandle) {
-    if (contentId === 'dashboard') contentHandle.update(buildBentoData(last), { subtitle: bentoSubtitle(last) });
-    else contentHandle.update(last);
+  document.body.classList.toggle('is-minimal', isPanel);
+  document.body.classList.toggle('show-content', isDashboard);
+  document.body.classList.toggle('show-elc', isElc);
+
+  const contentEl = document.getElementById('content');
+  if (isDashboard) {
+    if (contentEl) {
+      contentEl.classList.add('on');
+      if (bg !== 'none') contentEl.classList.add('clear');
+      else contentEl.classList.remove('clear');
+
+      if (!contentHandle && window.FinanceBento) {
+        contentHandle = window.FinanceBento.mount(contentEl, buildBentoData(getData()), {
+          title: 'Overview',
+          subtitle: bentoSubtitle(getData())
+        });
+      } else if (contentHandle) {
+        contentHandle.update(buildBentoData(getData()), { subtitle: bentoSubtitle(getData()) });
+      }
+    }
+  } else {
+    if (contentEl) {
+      contentEl.classList.remove('on');
+      contentEl.classList.remove('clear');
+      if (contentHandle) {
+        try { contentHandle.destroy(); } catch (e) {}
+        contentHandle = null;
+      }
+      contentEl.innerHTML = '';
+    }
   }
-  // And the elegant content, whichever one is showing.
-  if (elcHandles[currentContent]) elcHandles[currentContent].update(elcData(last));
 
-  elTotal.textContent = money(p.value, cur);
-  elDelta.textContent = pct(p.change24h) + ' today';
-  elDelta.className = 'delta ' + classFor(p.change24h);
+  ['focus', 'ledger', 'scale'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (content === id) {
+      el.classList.add('on');
+      if (!elcHandles[id] && window.ElegantContents && window.ElegantContents[ELC_MAP[id]]) {
+        elcHandles[id] = window.ElegantContents[ELC_MAP[id]].mount(el, getData());
+      } else if (elcHandles[id]) {
+        elcHandles[id].update(getData());
+      }
+    } else {
+      el.classList.remove('on');
+    }
+  });
 
-  const coins = (last.coins || []).slice(0, MAX_ROWS);
-  elList.innerHTML = coins.map(c => `
-    <div class="row">
-      <span class="sym">${c.symbol}</span>
-      <span class="price">${price(c.price, cur)}</span>
-      <span class="chg ${classFor(c.change24h)}">${pct(c.change24h)}</span>
-    </div>`).join('');
-
-  const t = last.at ? new Date(last.at) : null;
-  elFoot.textContent = t
-    ? 'momo · ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-    : 'momo';
+  if (isPanel) {
+    render();
+  }
 }
 
-// Mounts one module content style into #content, destroying the previous
-// one. The dashboard takes the bento data adapter; the other three take the
-// raw snapshot. 'panel' is not a module — it is the .panel element.
-function mountContent(id) {
-  if (contentId === id && contentHandle) return;
-  if (contentHandle) { contentHandle.destroy(); contentHandle = null; }
-  contentId = id;
-  var el = document.getElementById('content');
-  if (!el) return;
-  el.innerHTML = '';
-  if (id === 'dashboard' && window.FinanceBento) {
-    contentHandle = window.FinanceBento.mount(el, buildBentoData(last), {
-      title: 'Overview',
-      subtitle: bentoSubtitle(last)
-    });
-  } else if (id === 'hero' && window.Spotlight) {
-    contentHandle = window.Spotlight.mount(el, last);
-  } else if (id === 'tiles' && window.CoinGrid) {
-    contentHandle = window.CoinGrid.mount(el, last);
-  } else if (id === 'chart' && window.PulseChart) {
-    contentHandle = window.PulseChart.mount(el, last);
+function render() {
+  const data = getData();
+  if (!data) return;
+  const cur = data.portfolio.currency || 'USD';
+  const p = data.portfolio;
+
+  // Re-tint ink to market sentiment if embers is active
+  currentInkHex = inkColorFor(p.change24h);
+  if (currentBg === 'embers' && currentBgHandle && currentBgHandle.update) {
+    currentBgHandle.update({ colors: { ink: currentInkHex } });
+  }
+
+  // Update active content
+  if (currentContent === 'dashboard' && contentHandle) {
+    contentHandle.update(buildBentoData(data), { subtitle: bentoSubtitle(data) });
+  } else if (elcHandles[currentContent]) {
+    elcHandles[currentContent].update(data);
+  }
+
+  if (currentContent === 'panel') {
+    animateTotal(p.value, cur);
+    elDelta.textContent = pct(p.change24h) + ' today';
+    elDelta.className = 'delta ' + classFor(p.change24h);
+
+    const coins = (data.coins || []).slice(0, MAX_ROWS);
+    const chips = coins.map(c => {
+      const logoHtml = c.logo
+        ? `<img class="logo" src="${c.logo}" alt="${c.symbol}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"><span class="icon" style="display:none">${c.symbol.slice(0, 3)}</span>`
+        : `<span class="icon">${c.symbol.slice(0, 3)}</span>`;
+      const amt = (c.amount != null) ? c.amount : 0;
+      const val = c.price * amt;
+      const amtStr = amt >= 1 ? amt.toLocaleString('en-US', { maximumFractionDigits: 4 }) : amt.toPrecision(4);
+      return `
+        <div class="coin-chip">
+          ${logoHtml}
+          <span class="sym">${c.symbol}</span>
+          <span class="amt">${amtStr} · ${money(val, cur)}</span>
+          <span class="chg ${classFor(c.change24h)}">${pct(c.change24h)}</span>
+        </div>`;
+    }).join('');
+
+    const track = document.getElementById('coin-track');
+    if (track && chips) {
+      const half = '<div class="coin-half">' + chips.repeat(2) + '</div>';
+      track.innerHTML = half + half;
+    }
+
+    const t = data.at ? new Date(data.at) : null;
+    elFoot.textContent = t
+      ? 'momo · ' + t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+      : 'momo';
   }
 }
 
 window.Momo = {
-  update(snap) { last = snap; render(); },
+  update(snap) {
+    last = snap;
+    render();
+  },
 
-  // Theme is a data attribute on <html>; every colour above is a variable.
-  // The theme is one string, "background-content" (e.g. "aurora-panel"):
-  // the background is Chrome Arcs (aurora), Anodized Ink (embers), Holo
-  // Mosaic (holo), Laser Flow (laser) or Plasma Wave (plasma), and the
-  // content is the minimal panel, the Finance Bento dashboard, or one of
-  // the three elegant contents: Focus, Ledger or Scale. Legacy values
-  // still work: "aurora"/"embers" mean that bg + panel, "rain" means
-  // arcs + dashboard, anything else is the flat panel.
-  setTheme(name) {
-    document.documentElement.dataset.theme = name || 'midnight';
-    var bg = 'none', content = 'panel';
-    if (name === 'rain') { bg = 'aurora'; content = 'dashboard'; }
-    else {
-      var parts = String(name || '').split('-');
-      if (parts[0] === 'aurora' || parts[0] === 'embers' || parts[0] === 'holo' || parts[0] === 'laser' || parts[0] === 'plasma') bg = parts[0];
-      if (parts[1] === 'dashboard' || parts[1] === 'focus' || parts[1] === 'ledger' || parts[1] === 'scale') content = parts[1];
-    }
-    currentContent = content;
-    var arcs = document.getElementById('arcs');
-    if (arcs) {
-      if (bg === 'aurora') {
-        arcs.classList.add('on');
-        if (!arcsMounted && window.ChromeArcs) {
-          window.ChromeArcs.mount(arcs, { speed: 1, rings: 1, interactive: false });
-          arcsMounted = true;
-        }
-      } else {
-        arcs.classList.remove('on');
-      }
-    }
-    var ink = document.getElementById('ink');
-    if (ink) {
-      if (bg === 'embers') {
-        ink.classList.add('on');
-        if (!inkHandle && window.AnodizedInk) {
-          inkHandle = window.AnodizedInk.mount(ink, { preset: 'crimson', colors: { ink: currentInkHex }, interactive: false });
-        }
-      } else {
-        ink.classList.remove('on');
-      }
-    }
-    var holo = document.getElementById('holo');
-    if (holo) {
-      if (bg === 'holo') {
-        holo.classList.add('on');
-        if (!holoHandle && window.HoloMosaic) {
-          holoHandle = window.HoloMosaic.mount(holo, { mouseInteraction: false });
-        }
-      } else {
-        holo.classList.remove('on');
-      }
-    }
-    var laser = document.getElementById('laser');
-    if (laser) {
-      if (bg === 'laser') {
-        laser.classList.add('on');
-        if (!laserHandle && window.LaserFlow) {
-          laserHandle = window.LaserFlow.mount(laser, { mouseInteraction: false });
-        }
-      } else {
-        laser.classList.remove('on');
-      }
-    }
-    var plasma = document.getElementById('plasma');
-    if (plasma) {
-      if (bg === 'plasma') {
-        plasma.classList.add('on');
-        if (!plasmaHandle && window.PlasmaWave) {
-          plasmaHandle = window.PlasmaWave.mount(plasma, { mouseInteraction: false });
-        }
-      } else {
-        plasma.classList.remove('on');
-      }
-    }
-    var contentEl = document.getElementById('content');
-    var isElc = content === 'focus' || content === 'ledger' || content === 'scale';
-    if (isElc) {
-      // Elegant contents live in their own layers, not #content.
-      if (contentHandle) { contentHandle.destroy(); contentHandle = null; contentId = null; }
-      if (contentEl) contentEl.classList.remove('on');
-      document.body.classList.remove('show-content');
-      var elcIds = ['focus', 'ledger', 'scale'];
-      var elcMap = { focus: 'Focus', ledger: 'Ledger', scale: 'Scale' };
-      elcIds.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        if (content === id) {
-          document.body.classList.add('show-elc');
-          el.classList.add('on');
-          if (!elcHandles[id] && window.ElegantContents && window.ElegantContents[elcMap[id]]) {
-            elcHandles[id] = window.ElegantContents[elcMap[id]].mount(el, elcData(last));
-          } else if (elcHandles[id]) {
-            elcHandles[id].update(elcData(last));
-          }
-        } else {
-          el.classList.remove('on');
-        }
-      });
-    } else {
-      document.body.classList.remove('show-elc');
-      ['focus', 'ledger', 'scale'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.classList.remove('on');
-      });
-      if (contentEl) {
-        if (content === 'panel') {
-          document.body.classList.remove('show-content');
-          contentEl.classList.remove('on');
-          if (contentHandle) { contentHandle.destroy(); contentHandle = null; contentId = null; }
-        } else {
-          document.body.classList.add('show-content');
-          contentEl.classList.add('on');
-          // A live bg behind the module content shows through the gaps.
-          if (bg !== 'none') contentEl.classList.add('clear');
-          else contentEl.classList.remove('clear');
-          mountContent(content);
-        }
-      }
+  setMouse(m) {
+    const bgLayer = document.getElementById('bg-layer');
+    if (!bgLayer || !m) return;
+    const inside = !!m.inside;
+    const x = Number(m.x) || 0;
+    const y = Number(m.y) || 0;
+    const common = { bubbles: true, cancelable: false, clientX: x, clientY: y, pointerId: 1, isPrimary: true };
+    if (inside) {
+      lastMouseInside = true;
+      bgLayer.dispatchEvent(new PointerEvent('pointermove', common));
+    } else if (lastMouseInside) {
+      lastMouseInside = false;
+      bgLayer.dispatchEvent(new PointerEvent('pointerleave', common));
     }
   },
 
-  // Browser preview only. Real data arrives from the Swift host.
+  setCustomBg(cfg) {
+    customBgConfig = cfg || { activeId: '', items: [] };
+    if (currentBg === 'custom') setBackground('custom', true);
+  },
+
+  setTheme(name) {
+    document.documentElement.dataset.theme = name || 'aurora-panel';
+    let bg = 'aurora', content = 'panel';
+    if (name === 'rain') {
+      bg = 'aurora';
+      content = 'dashboard';
+    } else {
+      const parts = String(name || '').split('-');
+      const validBgs = ['aurora', 'embers', 'laser', 'plasma', 'custom'];
+      const validContents = ['panel', 'dashboard', 'focus', 'ledger', 'scale'];
+      if (validBgs.includes(parts[0])) bg = parts[0];
+      else if (['midnight', 'slate', 'paper', 'ember'].includes(parts[0])) bg = 'none';
+      if (validContents.includes(parts[1])) content = parts[1];
+    }
+    setBackground(bg, currentBg === bg && bg === 'custom');
+    setContent(content, bg);
+  },
+
   demo() {
     const base = [
-      ['BTC',  91204, 0.0214], ['ETH', 3142.55, 0.0142], ['SOL', 187.9, 0.0531],
-      ['BNB',  612.4, -0.0068], ['XRP', 2.134, 0.0121], ['DOGE', 0.3821, -0.0243],
-      ['ADA',  0.9182, 0.0087], ['AVAX', 38.62, -0.0155], ['LINK', 22.41, 0.0342],
-      ['TON',  5.182, 0.0041],
+      ['BTC', 91204, 0.0214], ['ETH', 3142.55, 0.0142], ['SOL', 187.9, 0.0531],
+      ['BNB', 612.4, -0.0068], ['XRP', 2.134, 0.0121], ['DOGE', 0.3821, -0.0243],
+      ['ADA', 0.9182, 0.0087], ['AVAX', 38.62, -0.0155], ['LINK', 22.41, 0.0342],
+      ['TON', 5.182, 0.0041],
     ];
     const holdings = [0.12, 1.4, 9.5, 0.8, 320, 2400, 900, 22, 40, 120];
 
@@ -557,6 +724,8 @@ window.Momo = {
         symbol,
         price: px * (1 + drift * (0.4 + i * 0.12)),
         change24h: chg + drift * (0.5 + i * 0.1),
+        amount: holdings[i],
+        logo: COIN_ICONS[symbol] ? `https://s2.coinmarketcap.com/static/img/coins/64x64/${COIN_ICONS[symbol]}.png` : ''
       }));
       const value = coins.reduce((s, c, i) => s + c.price * holdings[i], 0);
       const prev = coins.reduce((s, c, i) => s + (c.price / (1 + c.change24h)) * holdings[i], 0);
@@ -577,8 +746,33 @@ window.Momo = {
   }
 };
 
+// Continuous marquee animation loop - only active when in panel content mode
+let marqueeX = 0, marqueePrev = 0;
+function marqueeTick(t) {
+  if (currentContent === 'panel') {
+    const track = document.getElementById('coin-track');
+    if (track) {
+      if (!marqueePrev) marqueePrev = t;
+      const dt = Math.min(t - marqueePrev, 100);
+      marqueePrev = t;
+      const half = track.scrollWidth / 2;
+      if (half > 0) {
+        marqueeX += (dt / 1000) * 80;
+        if (marqueeX >= half) marqueeX -= half;
+        track.style.transform = 'translate3d(' + (-marqueeX).toFixed(2) + 'px,0,0)';
+      }
+    }
+  } else {
+    marqueePrev = 0;
+  }
+  requestAnimationFrame(marqueeTick);
+}
+requestAnimationFrame(marqueeTick);
+
+// Initial boot
+if (window.__MOMO_CUSTOM_BG) window.Momo.setCustomBg(window.__MOMO_CUSTOM_BG);
+window.Momo.setTheme(window.__MOMO_THEME || 'aurora-panel');
 render();
-window.Momo.setTheme(window.__MOMO_THEME);
 if (!window.__MOMO_HOST) setTimeout(() => window.Momo.demo(), 200);
 </script>
 </body>

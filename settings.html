@@ -199,6 +199,11 @@
   .field:last-child { margin-bottom: 0; }
   .field label { font-size: 13px; color: var(--text); font-weight: 500; }
   .hint { font-size: 11px; color: var(--faint); margin-top: 14px; line-height: 1.6; }
+  .key-status { font-size: 12px; color: var(--mute); display: inline-flex; align-items: center; gap: 8px; }
+  .key-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+  .key-status.is-warn { color: var(--amber); }
+  .key-status.is-warn .dot { background: var(--amber); }
+  .linklike { background: none; border: none; color: var(--blue); font: inherit; font-size: 11px; cursor: pointer; padding: 0; text-decoration: underline; }
 
   input, select {
     font: inherit; font-size: 13px; color: var(--text);
@@ -436,6 +441,15 @@
   }
   .theme-chip:hover { border-color: #555; }
   .theme-chip.selected { background: var(--blue); border-color: var(--blue); color: #fff; cursor: default; }
+  .theme-chip.add-bg-chip { border-style: dashed; color: var(--mute); }
+  .theme-chip.add-bg-chip:hover { border-color: var(--blue); color: var(--text); }
+  .theme-chip .chip-x {
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-left: 6px; width: 16px; height: 16px; border-radius: 50%;
+    font-size: 12px; line-height: 1; opacity: .7; cursor: pointer;
+  }
+  .theme-chip .chip-x:hover { opacity: 1; background: rgba(255,255,255,.18); }
+  .theme-chip.selected .chip-x { opacity: .85; }
   /* One live preview of the selected theme, instead of a box per option. */
   .theme-preview-big {
     position: relative; overflow: hidden; height: 300px; margin-top: 16px;
@@ -443,8 +457,9 @@
   }
   .preview-bg { position: absolute; inset: 0; }
   .preview-panel {
-    position: absolute; left: 24px; top: 50%; transform: translateY(-50%);
-    width: 300px; z-index: 1; pointer-events: none;
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 24px;
   }
   .preview-dash { position: absolute; inset: 0; z-index: 1; display: none; pointer-events: none; }
   /* Elegant contents preview like the dashboard: a fixed 1280px-wide
@@ -474,17 +489,29 @@
   .theme .bar { height: 5px; border-radius: 2.5px; flex: 1; opacity: .9; }
   .theme .name { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
   .theme .meta { font-size: 10px; color: var(--mute); margin-top: 2px; letter-spacing: .01em; }
-  /* Miniature of the minimal wallpaper panel, for the theme preview. */
-  .mini-panel { padding: 14px 16px; font-variant-numeric: tabular-nums; }
-  .mini-total { font-size: 22px; font-weight: 200; letter-spacing: -.02em; }
-  .mini-delta { font-size: 10px; color: #4ade80; margin: 2px 0 8px; }
-  .mini-row {
-    display: flex; justify-content: space-between;
-    font-size: 10px; color: #999; padding: 3px 0;
-    border-top: 1px solid rgba(255,255,255,.08);
+
+  /* Miniature of the minimal wallpaper panel for the theme preview. */
+  .mini-panel {
+    display: flex; flex-direction: column; justify-content: space-between; height: 100%;
+    font-variant-numeric: tabular-nums;
   }
-  .mini-row span:first-child { color: #fff; font-weight: 600; }
-  .mini-row .up { color: #4ade80; }
+  .mini-total { font-size: 32px; font-weight: 700; letter-spacing: -.03em; color: #fff; font-family: 'Space Grotesk', 'Work Sans', sans-serif; line-height: 1; }
+  .mini-delta { font-size: 12px; font-weight: 600; color: #4ade80; margin-top: 6px; }
+  .mini-marquee {
+    display: flex; gap: 8px; overflow: hidden;
+    mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  }
+  .mini-chip {
+    font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums;
+    padding: 5px 12px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(18,20,24,.6); backdrop-filter: blur(8px);
+    white-space: nowrap; color: rgba(255,255,255,.8);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .mini-chip span { color: #fff; font-weight: 700; }
+  .mini-chip em { font-style: normal; color: #4ade80; font-size: 10px; }
 
   /* ---------- footer ---------- */
 
@@ -588,9 +615,6 @@
 
     <section class="pane" id="pane-themes">
       <div class="themes" id="themes"></div>
-      <div class="theme-save">
-        <button class="primary" id="save-themes">Save</button>
-      </div>
     </section>
 
     <section class="pane" id="pane-settings">
@@ -612,9 +636,21 @@
         <label>Refresh (seconds)</label>
         <input id="refresh" type="number" min="15" step="15" value="60">
       </div>
+      <div class="field" id="key-status-row" style="display:none;">
+        <label>Live data</label>
+        <span class="key-status" id="key-status"><span class="dot"></span><span id="key-status-text">Using Momo&rsquo;s built-in key</span></span>
+      </div>
       <div class="field">
-        <label>CoinMarketCap API Key</label>
-        <input id="api-key" type="password" placeholder="Paste CMC API Key here">
+        <label>Your own CMC key</label>
+        <input id="api-key" type="password" placeholder="Only if the built-in key runs out" autocomplete="off">
+      </div>
+      <p class="hint" id="key-hint">Leave empty to use Momo&rsquo;s key. If it runs out of credits, paste your own CoinMarketCap key here and save. <button class="linklike" id="remove-key" type="button">Use built-in key instead</button></p>
+      <div class="field">
+        <label>Launch at login</label>
+        <label class="toggle" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
+          <input id="launch-at-login" type="checkbox" style="width:18px;height:18px;accent-color:var(--blue);">
+          <span style="font-size:12px;color:var(--mute);">Always on after Mac opens</span>
+        </label>
       </div>
       <p class="hint" id="credit-line">60s ≈ 1,440 credits a day on the Startup plan.</p>
     </section>
@@ -624,7 +660,6 @@
 
 <script src="chrome-arcs.js"></script>
 <script src="anodized-ink.js"></script>
-<script src="holo-mosaic.js"></script>
 <script src="laser-flow.js"></script>
 <script src="plasma-wave.js"></script>
 <script src="finance-bento.js"></script>
@@ -654,8 +689,14 @@ const state = window.__MOMO_SETTINGS || {
   ],
   currency: 'USD',
   refreshSeconds: 60,
+  launchAtLogin: true,
   theme: 'aurora-panel',
-  apiKey: '',
+  customBgs: [],
+  activeCustomBg: '',
+  keySource: 'builtin',
+  hasCustomKey: false,
+  customKeyLast4: '',
+  keyStatus: 'ok',
 };
 
 let priceData = {};
@@ -663,10 +704,16 @@ let priceInterval = null;
 
 // Load settings from Swift
 if (window.__MOMO_SETTINGS) {
-  if (window.__MOMO_SETTINGS.apiKey) state.apiKey = window.__MOMO_SETTINGS.apiKey;
+  if (window.__MOMO_SETTINGS.keySource) state.keySource = window.__MOMO_SETTINGS.keySource;
+  if (typeof window.__MOMO_SETTINGS.hasCustomKey === 'boolean') state.hasCustomKey = window.__MOMO_SETTINGS.hasCustomKey;
+  if (window.__MOMO_SETTINGS.customKeyLast4) state.customKeyLast4 = window.__MOMO_SETTINGS.customKeyLast4;
+  if (window.__MOMO_SETTINGS.keyStatus) state.keyStatus = window.__MOMO_SETTINGS.keyStatus;
   if (window.__MOMO_SETTINGS.currency) state.currency = window.__MOMO_SETTINGS.currency;
-  if (window.__MOMO_SETTINGS.refreshSeconds) state.refreshSeconds = window.__MOMO_SETTINGS.refreshSeconds;
+   if (window.__MOMO_SETTINGS.refreshSeconds) state.refreshSeconds = window.__MOMO_SETTINGS.refreshSeconds;
+   if (typeof window.__MOMO_SETTINGS.launchAtLogin === 'boolean') state.launchAtLogin = window.__MOMO_SETTINGS.launchAtLogin;
   if (window.__MOMO_SETTINGS.theme) state.theme = window.__MOMO_SETTINGS.theme;
+  if (Array.isArray(window.__MOMO_SETTINGS.customBgs)) state.customBgs = window.__MOMO_SETTINGS.customBgs;
+  if (typeof window.__MOMO_SETTINGS.activeCustomBg === 'string') state.activeCustomBg = window.__MOMO_SETTINGS.activeCustomBg;
   if (window.__MOMO_SETTINGS.holdings) state.holdings = window.__MOMO_SETTINGS.holdings;
   if (window.__MOMO_SETTINGS.prices) Object.assign(priceData, window.__MOMO_SETTINGS.prices);
 }
@@ -698,12 +745,11 @@ const POPULAR_COINS = [
 const BG_THEMES = [
   { id: 'aurora', name: 'Chrome Arcs', meta: 'Black chrome rings, iridescent light' },
   { id: 'embers', name: 'Anodized Ink', meta: 'Crimson ink, re-tints with the market' },
-  { id: 'holo', name: 'Holo Mosaic', meta: 'Spectral tiles that flip and shimmer' },
   { id: 'laser', name: 'Laser Flow', meta: 'A beam drops and spills light along a surface' },
   { id: 'plasma', name: 'Plasma Wave', meta: 'Two raymarched plasma ribbons, violet and cyan' },
 ];
 const CONTENT_THEMES = [
-  { id: 'panel', name: 'Minimal', meta: 'One total, ten rows' },
+  { id: 'panel', name: 'Minimal', meta: 'Big total & ambient coin ticker' },
   { id: 'dashboard', name: 'Dashboard', meta: 'Net worth, allocation, cash flow' },
   { id: 'focus', name: 'Focus', meta: 'One huge total, best and worst today' },
   { id: 'ledger', name: 'Ledger', meta: 'Statement table with thin change bars' },
@@ -711,16 +757,19 @@ const CONTENT_THEMES = [
 ];
 
 // The saved theme is one string, "background-content" (e.g. "aurora-panel").
-// Swift passes it through untouched, so no Swift change is needed.
 function parseTheme(value) {
   if (value === 'rain') return { bg: 'aurora', content: 'dashboard' }; // legacy
   const parts = String(value || '').split('-');
   const contents = ['dashboard', 'focus', 'ledger', 'scale'];
+  const bgs = ['aurora', 'embers', 'laser', 'plasma', 'custom'];
   return {
-    bg: (parts[0] === 'embers' || parts[0] === 'holo' || parts[0] === 'laser' || parts[0] === 'plasma') ? parts[0] : 'aurora',
+    bg: bgs.includes(parts[0]) ? parts[0] : 'aurora',
     content: contents.indexOf(parts[1]) !== -1 ? parts[1] : 'panel',
   };
 }
+
+var customBgs = Array.isArray(state.customBgs) ? state.customBgs.slice() : [];
+var activeCustomBg = state.activeCustomBg || '';
 
 const _parsed = parseTheme(state.theme);
 let selectedBg = _parsed.bg;
@@ -728,9 +777,48 @@ let selectedContent = _parsed.content;
 
 document.getElementById('currency').value = state.currency || 'USD';
 document.getElementById('refresh').value = state.refreshSeconds || 60;
-if (document.getElementById('api-key')) {
-  document.getElementById('api-key').value = state.apiKey || '';
+// The key field is never prefilled: the built-in key stays in Swift, and a
+// saved custom key is shown only as its last 4 characters, in the status line.
+let customKeyDirty = false;
+const apiKeyInputEl = document.getElementById('api-key');
+if (apiKeyInputEl) apiKeyInputEl.addEventListener('input', () => { customKeyDirty = true; });
+const removeKeyBtn = document.getElementById('remove-key');
+if (removeKeyBtn) removeKeyBtn.addEventListener('click', () => {
+  if (apiKeyInputEl) apiKeyInputEl.value = '';
+  customKeyDirty = true;
+  state.hasCustomKey = false;
+  state.customKeyLast4 = '';
+  renderKeyStatus();
+});
+renderKeyStatus();
+
+function renderKeyStatus() {
+  const row = document.getElementById('key-status-row');
+  const el = document.getElementById('key-status');
+  const txt = document.getElementById('key-status-text');
+  if (!row || !el || !txt) return;
+  // The status row stays hidden in normal use. It only appears when the
+  // key is a problem, so the user knows to add their own key.
+  const bad = state.keyStatus === 'exhausted' || state.keyStatus === 'invalid' || state.keyStatus === 'missing';
+  row.style.display = bad ? '' : 'none';
+  if (!bad) {
+    if (removeKeyBtn) removeKeyBtn.style.display = state.hasCustomKey ? '' : 'none';
+    return;
+  }
+  el.classList.add('is-warn');
+  if (state.keyStatus === 'exhausted') {
+    txt.textContent = state.keySource === 'custom'
+      ? 'Your key is out of credits — check it on CoinMarketCap'
+      : 'Built-in key out of credits — add your own key below';
+  } else if (state.keyStatus === 'invalid') {
+    txt.textContent = 'API key rejected — check the key below';
+  } else {
+    txt.textContent = 'No key set up — add your own key below';
+  }
+  if (removeKeyBtn) removeKeyBtn.style.display = state.hasCustomKey ? '' : 'none';
 }
+const launchCb = document.getElementById('launch-at-login');
+if (launchCb) launchCb.checked = !!state.launchAtLogin;
 
 document.getElementById('currency').addEventListener('change', () => {
   state.currency = document.getElementById('currency').value;
@@ -746,6 +834,9 @@ function switchPane(name) {
   document.querySelectorAll('.pane').forEach(p => {
     p.classList.toggle('is-active', p.id === 'pane-' + name);
   });
+  if (name === 'themes') {
+    onThemesPaneVisible();
+  }
 }
 document.querySelectorAll('.hb-nav button').forEach(btn => {
   btn.addEventListener('click', () => switchPane(btn.dataset.pane));
@@ -1047,6 +1138,10 @@ function destroyPreviewBg() {
   previewBgHandle = null;
 }
 
+function activeCustomBgItem() {
+  return customBgs.find(function (b) { return b.id === activeCustomBg; }) || customBgs[0] || null;
+}
+
 function mountPreviewBg(id) {
   var bgEl = themesEl.querySelector('.preview-bg');
   if (!bgEl) return;
@@ -1054,9 +1149,28 @@ function mountPreviewBg(id) {
   bgEl.innerHTML = '';
   if (id === 'aurora' && window.ChromeArcs) previewBgHandle = window.ChromeArcs.mount(bgEl, { speed: 1, rings: 1, interactive: true });
   else if (id === 'embers' && window.AnodizedInk) previewBgHandle = window.AnodizedInk.mount(bgEl, { preset: 'crimson', interactive: true });
-  else if (id === 'holo' && window.HoloMosaic) previewBgHandle = window.HoloMosaic.mount(bgEl, { mouseInteraction: true });
   else if (id === 'laser' && window.LaserFlow) previewBgHandle = window.LaserFlow.mount(bgEl, { mouseInteraction: true });
   else if (id === 'plasma' && window.PlasmaWave) previewBgHandle = window.PlasmaWave.mount(bgEl, { mouseInteraction: true });
+  else if (id === 'custom') {
+    var item = activeCustomBgItem();
+    if (item && item.path) {
+      var src = item.path.indexOf('file://') === 0 ? item.path : 'file://' + item.path.split('/').map(encodeURIComponent).join('/');
+      if (item.type === 'video') {
+        var v = document.createElement('video');
+        v.src = src; v.autoplay = true; v.muted = true; v.loop = true; v.playsInline = true;
+        v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+        bgEl.appendChild(v);
+        v.play().catch(function(){});
+        previewBgHandle = { destroy: function(){ v.pause(); v.removeAttribute('src'); v.load(); v.remove(); } };
+      } else {
+        var img = document.createElement('img');
+        img.src = src;
+        img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+        bgEl.appendChild(img);
+        previewBgHandle = { destroy: function(){ img.remove(); } };
+      }
+    }
+  }
 }
 
 function layoutDash() {
@@ -1093,7 +1207,13 @@ function demoSnap() {
     ['TON', 5.182, 0.0041],
   ];
   const holdings = [0.12, 1.4, 9.5, 0.8, 320, 2400, 900, 22, 40, 120];
-  const coins = base.map(([symbol, px, chg]) => ({ symbol, price: px, change24h: chg }));
+  const coins = base.map(([symbol, px, chg], i) => ({
+    symbol,
+    price: px,
+    change24h: chg,
+    amount: holdings[i],
+    logo: getCoinIconUrl(symbol) || ''
+  }));
   const value = coins.reduce((s, c, i) => s + c.price * holdings[i], 0);
   const prev = coins.reduce((s, c, i) => s + (c.price / (1 + c.change24h)) * holdings[i], 0);
   return {
@@ -1138,12 +1258,22 @@ function showPreviewContent() {
 
 function renderThemes() {
   if (!themesEl) return;
+  var customChips = customBgs.map(function (b) {
+    var sel = selectedBg === 'custom' && activeCustomBg === b.id;
+    var label = (b.name || 'Custom').replace(/</g, '&lt;');
+    if (label.length > 14) label = label.slice(0, 13) + '…';
+    return '<button class="theme-chip' + (sel ? ' selected' : '') + '" data-bg="custom" data-custom-id="' + b.id + '">' + label +
+      '<span class="chip-x" data-remove-bg="' + b.id + '" title="Remove">×</span></button>';
+  }).join('');
+
   themesEl.innerHTML =
-    '<div class="theme-group"><div class="theme-group-label">Theme</div>' +
+    '<div class="theme-group">' +
       '<div class="theme-sub">Background</div><div class="theme-chips">' +
         BG_THEMES.map(function (t) {
           return '<button class="theme-chip' + (selectedBg === t.id ? ' selected' : '') + '" data-bg="' + t.id + '">' + t.name + '</button>';
         }).join('') +
+        customChips +
+        '<button class="theme-chip add-bg-chip" data-add-bg="1">+ add BG</button>' +
       '</div>' +
       '<div class="theme-sub">Content</div><div class="theme-chips">' +
         CONTENT_THEMES.map(function (t) {
@@ -1153,11 +1283,15 @@ function renderThemes() {
       '<div class="theme-preview-big">' +
         '<div class="preview-bg"></div>' +
         '<div class="preview-panel"><div class="mini-panel">' +
-          '<div class="mini-total">$22,362</div>' +
-          '<div class="mini-delta">+1.51% today</div>' +
-          '<div class="mini-row"><span>BTC</span><span>$91,069</span><span class="up">+1.96%</span></div>' +
-          '<div class="mini-row"><span>ETH</span><span>$3,137</span><span class="up">+1.20%</span></div>' +
-          '<div class="mini-row"><span>SOL</span><span>$187.46</span><span class="up">+5.05%</span></div>' +
+          '<div>' +
+            '<div class="mini-total">$22,362</div>' +
+            '<div class="mini-delta">+1.51% today</div>' +
+          '</div>' +
+           '<div class="mini-marquee">' +
+             '<div class="mini-chip"><span>BTC</span>0.12 · $10,944<em>+1.96%</em></div>' +
+             '<div class="mini-chip"><span>ETH</span>1.4 · $4,399<em>+1.20%</em></div>' +
+             '<div class="mini-chip"><span>SOL</span>9.5 · $1,785<em>+5.05%</em></div>' +
+           '</div>' +
         '</div></div>' +
         '<div class="preview-dash clear"></div>' +
         '<div class="preview-elc" data-elc="focus"></div>' +
@@ -1185,12 +1319,37 @@ function renderThemes() {
   });
   mountPreviewBg(selectedBg);
   showPreviewContent();
-  // Clicking a chip only moves the selection; Save persists it.
+  // Clicking a chip updates selection, preview, and broadcasts to wallpaper
   themesEl.querySelectorAll('[data-bg]').forEach(function (chip) {
-    chip.addEventListener('click', function () {
+    chip.addEventListener('click', function (e) {
+      if (e.target.closest('[data-remove-bg]')) return;
       selectedBg = chip.dataset.bg;
-      themesEl.querySelectorAll('[data-bg]').forEach(function (b) { b.classList.toggle('selected', b.dataset.bg === selectedBg); });
+      if (selectedBg === 'custom') {
+        activeCustomBg = chip.dataset.customId || activeCustomBg || (customBgs[0] && customBgs[0].id) || '';
+      }
+      themesEl.querySelectorAll('[data-bg]').forEach(function (b) {
+        var sel = b.dataset.bg === selectedBg;
+        if (selectedBg === 'custom') sel = sel && b.dataset.customId === activeCustomBg;
+        b.classList.toggle('selected', !!sel);
+      });
       mountPreviewBg(selectedBg);
+      sendThemePreview();
+      saveSettings();
+    });
+  });
+  var addBgBtn = themesEl.querySelector('[data-add-bg]');
+  if (addBgBtn) addBgBtn.addEventListener('click', function () {
+    if (window.webkit?.messageHandlers?.momoPickBackground) {
+      window.webkit.messageHandlers.momoPickBackground.postMessage('');
+    }
+  });
+  themesEl.querySelectorAll('[data-remove-bg]').forEach(function (x) {
+    x.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var id = x.dataset.removeBg;
+      if (window.webkit?.messageHandlers?.momoRemoveBackground) {
+        window.webkit.messageHandlers.momoRemoveBackground.postMessage(id);
+      }
     });
   });
   themesEl.querySelectorAll('[data-content]').forEach(function (chip) {
@@ -1198,9 +1357,38 @@ function renderThemes() {
       selectedContent = chip.dataset.content;
       themesEl.querySelectorAll('[data-content]').forEach(function (b) { b.classList.toggle('selected', b.dataset.content === selectedContent); });
       showPreviewContent();
+      sendThemePreview();
+      saveSettings();
     });
   });
 }
+
+function onThemesPaneVisible() {
+  requestAnimationFrame(function () {
+    mountPreviewBg(selectedBg);
+    showPreviewContent();
+  });
+}
+
+function sendThemePreview() {
+  const themeStr = selectedBg + '-' + selectedContent;
+  const payload = JSON.stringify({ theme: themeStr, activeCustomBg: activeCustomBg });
+  if (window.webkit?.messageHandlers?.momoThemePreview) {
+    window.webkit.messageHandlers.momoThemePreview.postMessage(payload);
+  }
+}
+
+window.onCustomBgsUpdated = function(payload) {
+  if (!payload) return;
+  if (Array.isArray(payload.customBgs)) customBgs = payload.customBgs;
+  if (typeof payload.activeCustomBg === 'string') activeCustomBg = payload.activeCustomBg;
+  if (payload.theme) {
+    var p = parseTheme(payload.theme);
+    selectedBg = p.bg;
+    selectedContent = p.content;
+  }
+  renderThemes();
+};
 
 // Demo data for the dashboard preview (same shapes as the 21st.dev demo).
 function demoBentoData() {
@@ -1252,12 +1440,10 @@ document.getElementById('refresh').addEventListener('input', e => {
 
 /* ---------- save ---------- */
 
-/* ---------- save ---------- */
-
 function saveSettings(e) {
   const btn = e && (e.currentTarget || e.target);
   const originalText = btn ? btn.textContent : '';
-  if (btn) btn.textContent = '\u2713';
+  if (btn) btn.textContent = '\u2713 Saved';
   const holdings = [];
   rowsEl.querySelectorAll('.row').forEach(row => {
     const symbol = row.querySelector('.sym').value.trim().toUpperCase();
@@ -1267,11 +1453,11 @@ function saveSettings(e) {
 
   if (!holdings.length) {
     alert('Please add at least one coin with an amount greater than 0');
-    document.querySelector('.nav-item[data-pane="portfolio"]').click();
-    // Switch back to portfolio view
+    switchPane('portfolio');
     if (searchContainer.classList.contains('is-active')) {
-      addNewCoinBtn.click();
+      closeSearch();
     }
+    if (btn) btn.textContent = originalText || 'Save';
     return;
   }
 
@@ -1281,21 +1467,24 @@ function saveSettings(e) {
     currency: document.getElementById('currency').value,
     refreshSeconds: Math.max(15, parseInt(document.getElementById('refresh').value, 10) || 60),
     theme: selectedBg + '-' + selectedContent,
-    apiKey: apiKeyInput ? apiKeyInput.value.trim() : (state.apiKey || ''),
+    activeCustomBg: activeCustomBg,
+    // Only send a custom key when the user typed one or removed it;
+    // an untouched empty field leaves the saved key alone.
+    ...(customKeyDirty ? { customApiKey: apiKeyInput ? apiKeyInput.value.trim() : '' } : {}),
+    launchAtLogin: !!(document.getElementById('launch-at-login') && document.getElementById('launch-at-login').checked),
   };
 
+  state.theme = payload.theme;
+  state.currency = payload.currency;
+  state.refreshSeconds = payload.refreshSeconds;
+  state.launchAtLogin = payload.launchAtLogin;
   if (window.webkit?.messageHandlers?.momoSave) {
     window.webkit.messageHandlers.momoSave.postMessage(JSON.stringify(payload));
-    
-    // Switch back to portfolio view after save
-    if (searchContainer.classList.contains('is-active')) {
-      setTimeout(() => addNewCoinBtn.click(), 300);
-    }
   } else {
     console.log('momo payload', payload);
   }
 
-  if (btn) setTimeout(() => { btn.textContent = originalText || 'Save'; }, 1200);
+  if (btn) setTimeout(() => { btn.textContent = originalText || 'Save'; }, 1400);
 }
 saveTopBtn.addEventListener('click', saveSettings);
 if (saveThemesBtn) saveThemesBtn.addEventListener('click', saveSettings);
