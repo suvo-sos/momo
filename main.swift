@@ -379,7 +379,7 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         config.userContentController = controller
 
         let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 820),
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 820),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
