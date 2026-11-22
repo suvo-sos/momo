@@ -4,58 +4,39 @@
 // The charts are plain DOM + SVG, as in the original — no dependencies.
 // Momo uses it as the third theme: a complete visual dashboard instead of
 // the minimal wallpaper panel. Live data (net worth, crypto) comes from the
-// CMC snapshot; history, payments, goals, cash flow and stocks are demo
+// CMC snapshot; history, cash flow and stocks are demo
 // shapes until a real source exists for them.
 (function () {
   "use strict";
 
-  var CSS = `.fpb{font-family:Geist,ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#fff;width:100%;max-width:1380px;margin:0 auto}
+  var CSS = `.fpb{font-family:Geist,ui-sans-serif,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;color:#fff;width:100%;max-width:none;margin:0;height:100%}.fpb .grid{height:100%}
 .fpb *{box-sizing:border-box}
 .fpb .fpb-c{border-radius:24px}
 .fpb .vbrow{display:flex;justify-content:flex-end;margin-top:16px}
 .fpb{--acc:#E8FF1F;--t1:#fff;--t2:rgba(255,255,255,.56);--t3:rgba(255,255,255,.38);--hair:rgba(255,255,255,.14);--ease:cubic-bezier(.32,.72,0,1);
     --fiat:#FFFFFF;--stocks:#A9B2FF;--crypto:#FFB37A}
 .fpb *{box-sizing:border-box}
-.fpb .fpb-c{position:relative;padding:20px 22px 22px;background:rgba(10,12,16,.55);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.08);color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.4)}
-.fpb .top{display:flex;align-items:center;gap:14px;height:44px;margin-bottom:16px}
-.fpb .top h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.03em;flex:1}
-.fpb .top h1 span{font-weight:500;color:var(--t3);font-size:15px;letter-spacing:-.01em;margin-left:12px}
-.fpb .seg{display:flex;padding:3px;gap:2px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
-.fpb .seg button{border:0;height:28px;min-width:44px;padding:0 12px;border-radius:11px;background:transparent;color:var(--t2);font:600 12.5px Geist,sans-serif;cursor:pointer;transition:background .25s,color .25s}
-.fpb .seg button[aria-pressed="true"]{background:#fff;color:#0b0b0c}
-.fpb .seg button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.fpb .ctrls{display:flex;gap:10px}
-.fpb .ava{width:40px;height:40px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px rgba(255,255,255,.18);flex:0 0 auto}
-.fpb .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.fpb .fpb-c{position:relative;padding:0;background:transparent;border:none;color:#fff;display:contents}
+.fpb .fpb-c{display:block}.fpb .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;width:100%}
 .fpb .h1{height:376px}
-.fpb .h2{height:168px}
-.fpb .h3{height:330px}
-.fpb #nw{grid-column:span 8}
+.fpb .h3{height:360px}
+.fpb #nw{grid-column:span 4}
 .fpb #alloc{grid-column:span 4}
-.fpb .kpi{grid-column:span 3}
-.fpb #flow{grid-column:span 5}
+.fpb #flow{grid-column:1 / span 4;height:600px}
 .fpb #crypto{grid-column:span 4}
-.fpb #stocks{grid-column:span 3}
+.fpb #stocks{grid-column:span 4}
 @media (max-width:1199px){.fpb #nw{grid-column:span 12}
-.fpb #alloc{grid-column:span 6;grid-row:span 2;height:auto}
-.fpb .kpi{grid-column:span 6}
-.fpb #flow{grid-column:span 12}
+.fpb #alloc{grid-column:span 6;height:auto}
+.fpb #flow{grid-column:1 / span 4;height:600px}
 .fpb #crypto,.fpb #stocks{grid-column:span 6}}
 @media (max-width:767px){.fpb .fpb-c{padding:16px 14px}
-.fpb .top{flex-wrap:wrap;height:auto;gap:12px}
-.fpb .top h1{flex:1;font-size:24px}
-.fpb .top h1 span{display:block;margin:4px 0 0}
-.fpb .ctrls{order:3;flex:1 0 100%;justify-content:space-between}
-.fpb .ava{order:2}
 .fpb #nw{height:420px}
 .fpb #nw .legend{flex:1 0 100%;order:3;margin-top:8px}
 .fpb #nw .hrow{flex-wrap:wrap}
 .fpb #nw .nrow{flex-wrap:wrap;gap:6px 16px}
 .fpb #alloc{grid-column:span 12;grid-row:auto;height:376px}
-.fpb .kpi{grid-column:span 6}
 .fpb #crypto,.fpb #stocks{grid-column:span 12}
 .fpb .grid{gap:12px}}
-@media (max-width:520px){.fpb .kpi{grid-column:span 12}}
 .fpb .card{position:relative;border-radius:24px;overflow:hidden;opacity:0;transform:translateY(14px) scale(.985);transition:opacity .7s ease,transform .9s var(--ease);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .fpb .in .card{opacity:1;transform:none}
 .fpb .card .rim{position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 0 0 1px rgba(255,255,255,.06);pointer-events:none;z-index:9}
@@ -117,22 +98,12 @@
 
   function markup(o) {
     return '<div class="fpb-c canvas">' +
-      '<div class="top">' +
-        '<h1>' + esc(o.title) + '<span id="asof">' + esc(o.subtitle) + '</span></h1>' +
-        '<div class="ctrls"><div class="seg" id="period" role="group" aria-label="Period"></div>' +
-        '<div class="seg" id="ccy" role="group" aria-label="Currency"></div></div>' +
-        (o.avatar ? '<img class="ava" alt="' + esc(o.avatarAlt) + '" src="' + esc(o.avatar) + '">' : '') +
-      '</div>' +
       '<div class="grid" id="grid">' +
         '<section class="card h1" id="nw" aria-label="Net worth"></section>' +
-        '<section class="card h1" id="alloc" aria-label="Allocation"></section>' +
-        '<section class="card h2 kpi" id="ret" aria-label="Portfolio return"></section>' +
-        '<section class="card glass h2 kpi" id="cash" aria-label="Free cash"></section>' +
-        '<section class="card glass h2 kpi" id="pay" aria-label="Upcoming payments"></section>' +
-        '<section class="card glass h2 kpi" id="goals" aria-label="Goals"></section>' +
+        '' +
+        '' +
+        '' +
         '<section class="card h3" id="flow" aria-label="Cash flow"></section>' +
-        '<section class="card h3" id="crypto" aria-label="Crypto"></section>' +
-        '<section class="card h3" id="stocks" aria-label="Stocks"></section>' +
       '</div>' +
     '</div>' +
     (o.credit ? '<div class="vbrow"><a class="vb-badge" href="https://vasnev.art" target="_blank" rel="noopener" aria-label="Made by vasnev.art"><span class="vb-mark" id="vbm" aria-hidden="true"></span><span><span class="vb-by">by</span> vasnev.art</span><svg class="vb-arr" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 8.5l5-5M4.5 3.5h4v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>' : '') +
@@ -205,10 +176,6 @@
     var root = document.createElement("div");
     root.className = "fpb";
     root.innerHTML = markup({
-      title: options.title || "Overview",
-      subtitle: options.subtitle || "",
-      avatar: options.avatar || "",
-      avatarAlt: options.avatarAlt || "",
       credit: !!options.credit
     });
     container.appendChild(root);
@@ -335,16 +302,16 @@
 
     /* ---- Net worth: a stream of the three asset classes ---- */
     var nw = $id("nw");
-    nw.innerHTML = bg(GR.blue) + '<div class="in-c">' +
-      '<div class="row hrow" style="justify-content:space-between"><div class="ttl">Net worth</div>' +
-        '<div class="legend"><span><i style="background:' + COL.fiat + '"></i>Fiat</span><span><i style="background:' + COL.stocks + '"></i>Stocks</span><span><i style="background:' + COL.crypto + '"></i>Crypto</span></div></div>' +
-      '<div class="row nrow" style="margin-top:16px;align-items:flex-end;gap:16px"><div class="nwn"></div>' +
-        '<div style="padding-bottom:6px"><div class="delta nwd"></div><div class="muted nwc" style="margin-top:3px"></div></div></div>' +
-      '<svg class="nws" style="position:absolute;left:0;right:0;bottom:0;display:block" aria-hidden="true"></svg></div><div class="rim"></div>';
-    var nwNum = DotNumber(nw.querySelector(".nwn"), innerWidth < 520 ? 5.4 : 7);
+    nw.innerHTML = bg(GR.blue) + '<div class="in-c" style="display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100%;text-align:center;padding:24px 16px">' +
+      '<div class="ttl" style="margin-top:4px">Total Asset</div>' +
+      '<div class="nwn"></div>' +
+      '<div class="delta nwd" style="margin-bottom:8px"></div>' +
+      '</div><div class="rim"></div>';
+    var nwNum = DotNumber(nw.querySelector(".nwn"), innerWidth < 520 ? 8 : 12);
     var nwGrow = 0, nwData = null;
     function drawNW() {
-      var svg = nw.querySelector(".nws"), W = Math.max(1, nw.clientWidth), Hh = 226, top = 26, bot = 26, mid = top + (Hh - top - bot) / 2;
+      var svg = nw.querySelector(".nws");
+      if (!svg) return;
       svg.setAttribute("width", W);
       svg.setAttribute("height", Hh);
       svg.setAttribute("viewBox", "0 0 " + W + " " + Hh);
@@ -397,12 +364,13 @@
     function renderNW() {
       nwData = series();
       var last = nwData[nwData.length - 1], prev = nwData[Math.max(0, nwData.length - 2)];
-      var t = total(last), pt = total(prev), chg = pt ? (t - pt) / pt : 0;
+      var t = (cur && cur.netWorth) ? cur.netWorth : total(last);
+      var pt = total(prev), chg = pt ? (t - pt) / pt : 0;
       nwNum.count(t);
       var dEl = nw.querySelector(".nwd");
       dEl.textContent = (chg >= 0 ? "+" : "−") + Math.abs(chg * 100).toFixed(1) + "% vs prev";
       dEl.style.color = chg >= 0 ? ACC : "#ff7a7a";
-      nw.querySelector(".nwc").textContent = "Total across fiat, stocks and crypto";
+      /* nwc removed */
       if (nwGrow < 1 && !reduce) {
         var t0 = performance.now();
         (function grow(now) {
@@ -418,12 +386,13 @@
 
     /* ---- Allocation: donut gauge of fiat / stocks / crypto ---- */
     var alloc = $id("alloc");
-    alloc.innerHTML = bg(GR.graph) + '<div class="in-c">' +
+    if (alloc) alloc.innerHTML = bg(GR.graph) + '<div class="in-c">' +
       '<div class="ttl">Allocation</div>' +
       '<div style="display:flex;justify-content:center;margin-top:14px"><svg class="donut" width="176" height="176" viewBox="0 0 176 176" aria-hidden="true"></svg></div>' +
       '<div class="alloc-rows" style="margin-top:16px;display:flex;flex-direction:column;gap:10px"></div>' +
       '</div><div class="rim"></div>';
     function renderAlloc() {
+      if (!alloc) return;
       var last = H[H.length - 1];
       if (!last) return;
       var t = total(last);
@@ -448,89 +417,62 @@
       }).join("");
     }
 
-    /* ---- KPI tiles ---- */
-    var ret = $id("ret");
-    ret.classList.add("solid");
-    ret.innerHTML = '<div class="in-c"><div class="cap">Return · <span class="ret-per">1Y</span></div>' +
-      '<div class="big ret-big" style="margin-top:14px">—</div>' +
-      '<div class="muted ret-sub" style="margin-top:8px;color:rgba(0,0,0,.55)">vs start of period</div></div><div class="rim"></div>';
-    function renderRet() {
-      var D = series();
-      if (D.length < 2) return;
-      var first = total(D[0]), last = total(D[D.length - 1]), r = (last - first) / first;
-      var big = ret.querySelector(".ret-big");
-      tween(big, r * 100, function (v) { return (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(1) + "%"; });
-      ret.querySelector(".ret-per").textContent = S.period;
-      ret.querySelector(".ret-sub").textContent = "from " + money(first, { compact: true }) + " to " + money(last, { compact: true });
-    }
-    var cash = $id("cash");
-    cash.innerHTML = '<div class="in-c"><div class="cap">Free cash</div>' +
-      '<div class="big cash-big" style="margin-top:14px">—</div>' +
-      '<div class="muted" style="margin-top:8px">In fiat accounts</div></div><div class="rim"></div>';
-    function renderCash() {
-      var last = H[H.length - 1];
-      if (!last) return;
-      tween(cash.querySelector(".cash-big"), last.fiat, function (v) { return money(v, { compact: true }); });
-    }
-    var pay = $id("pay");
-    pay.innerHTML = '<div class="in-c"><div class="cap">Upcoming payments</div><div class="pay-rows" style="margin-top:12px;display:flex;flex-direction:column;gap:9px"></div></div><div class="rim"></div>';
-    function renderPay(d) {
-      pay.querySelector(".pay-rows").innerHTML = (d.payments || []).slice(0, 3).map(function (p) {
-        return '<div class="row" style="justify-content:space-between"><span style="font-size:13px;font-weight:500">' + esc(p.name) + ' <span style="color:' + T3 + '">· ' + esc(p.date) + '</span></span>' +
-          '<span class="mono" style="font-size:12.5px">' + money(p.amount) + '</span></div>';
-      }).join("") || '<div class="muted">Nothing scheduled</div>';
-    }
-    var goals = $id("goals");
-    goals.innerHTML = '<div class="in-c"><div class="cap">Goals</div><div class="goal-rows" style="margin-top:12px;display:flex;flex-direction:column;gap:12px"></div></div><div class="rim"></div>';
-    function renderGoals(d) {
-      goals.querySelector(".goal-rows").innerHTML = (d.goals || []).slice(0, 2).map(function (g) {
-        var pct = Math.round(g.progress * 100);
-        return '<div><div class="row" style="justify-content:space-between"><span style="font-size:13px;font-weight:500">' + esc(g.name) + '</span>' +
-          '<span class="mono" style="font-size:12px;color:' + T2 + '">' + pct + '%</span></div>' +
-          '<div style="height:5px;border-radius:3px;background:rgba(255,255,255,.14);margin-top:7px;overflow:hidden"><div style="height:100%;width:' + pct + '%;border-radius:3px;background:' + ACC + '"></div></div></div>';
-      }).join("") || '<div class="muted">No goals yet</div>';
-    }
-
     /* ---- Cash flow: mirrored income / spending bars ---- */
     var flow = $id("flow");
     flow.innerHTML = bg(GR.green) + '<div class="in-c">' +
-      '<div class="row" style="justify-content:space-between"><div class="ttl">Cash flow</div>' +
-      '<div class="legend"><span><i style="background:' + ACC + '"></i>Income</span><span><i style="background:#ff7a7a"></i>Spending</span></div></div>' +
-      '<svg class="flow-svg" style="display:block;margin-top:18px" aria-hidden="true"></svg>' +
-      '<div class="muted flow-cap" style="margin-top:10px">Latest year · thousands</div></div><div class="rim"></div>';
+      '<div class="ttl" style="margin-bottom:14px">My Coins</div>' +
+      '<div class="coins-list" style="display:flex;flex-direction:column;gap:10px;padding:0 24px 24px"></div>' +
+      '</div><div class="rim"></div>';
     function renderFlow(d) {
-      var cf = d.cashflow || { months: [], income: [[]], spending: [[]] };
-      var months = cf.months || [], inc = (cf.income || [[]])[0] || [], spd = (cf.spending || [[]])[0] || [];
-      var svg = flow.querySelector(".flow-svg");
-      var W = Math.max(1, flow.clientWidth - 48), Hh = 190, mid = 92, max = 1;
-      for (var i = 0; i < months.length; i++) max = Math.max(max, inc[i] || 0, spd[i] || 0);
-      var bw = Math.min(30, (W / Math.max(1, months.length)) * 0.42), gap = W / Math.max(1, months.length);
-      svg.setAttribute("width", W);
-      svg.setAttribute("height", Hh);
-      svg.setAttribute("viewBox", "0 0 " + W + " " + Hh);
-      var html = '<line x1="0" x2="' + W + '" y1="' + mid + '" y2="' + mid + '" stroke="rgba(255,255,255,.25)" stroke-width="1"/>';
-      for (var j = 0; j < months.length; j++) {
-        var cx = gap * j + gap / 2, ih = (inc[j] || 0) / max * 78, sh = (spd[j] || 0) / max * 78;
-        html += '<rect x="' + (cx - bw / 2) + '" y="' + (mid - ih) + '" width="' + bw + '" height="' + ih + '" rx="5" fill="' + ACC + '"/>' +
-          '<rect x="' + (cx - bw / 2) + '" y="' + mid + '" width="' + bw + '" height="' + sh + '" rx="5" fill="#ff7a7a"/>' +
-          '<text x="' + cx + '" y="' + (Hh - 6) + '" text-anchor="middle" font-size="11" font-weight="500" fill="rgba(255,255,255,.6)" font-family="Geist">' + esc(months[j]) + '</text>';
+      var holdings = (d && d.holdings) || [];
+      var list = flow.querySelector(".coins-list");
+      if (!list) return;
+      list.innerHTML = "";
+      holdings.forEach(function (c) {
+        var amt = (c.amount != null) ? c.amount : 0;
+        var val = (c.price || 0) * amt;
+        var chgColor = c.change24h >= 0 ? ACC : "#ff7a7a";
+        var logoSrc = c.logo ? c.logo : "";
+        var item = document.createElement("div");
+        item.style.display = "flex";
+        item.style.alignItems = "center";
+        item.style.gap = "10px";
+        item.style.padding = "10px 12px";
+        item.style.borderRadius = "12px";
+        item.style.background = "rgba(255,255,255,.06)";
+        item.innerHTML =
+          '<img src="' + esc(logoSrc) + '" class="coin-logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\';">' +
+          '<span class="coin-sym" style="display:none;font-weight:700;letter-spacing:.02em">' + esc(c.symbol.slice(0, 3)) + '</span>' +
+          '<div style="flex:1">' +
+          '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+          '<span style="font-weight:700;letter-spacing:.02em">' + esc(c.symbol) + '</span>' +
+          '<span style="color:' + chgColor + ';font-weight:600;font-size:12px">' + (c.change24h != null ? pct(c.change24h) : "") + '</span>' +
+          '</div>' +
+          '<div class="mono" style="font-size:12px;color:rgba(255,255,255,.55);margin-top:3px">' +
+          (amt >= 1 ? amt.toLocaleString('en-US', { maximumFractionDigits: 4 }) : amt.toPrecision(4)) + ' · ' + money(val, { compact: true }) +
+          '</div>' +
+          '</div>';
+        list.appendChild(item);
+      });
+      if (holdings.length === 0) {
+        list.insertAdjacentHTML("beforeend", '<div class="muted" style="margin-top:16px">No holdings</div>');
       }
-      svg.innerHTML = html;
     }
 
     /* ---- Crypto: 7-candle strips per asset ---- */
     var crypto = $id("crypto");
-    crypto.innerHTML = bg(GR.copper) + '<div class="in-c">' +
+    if (crypto) crypto.innerHTML = bg(GR.copper) + '<div class="in-c">' +
       '<div class="ttl">Crypto</div>' +
-      '<div class="crypto-rows" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div></div><div class="rim"></div>';
+      '<div class="crypto-rows" style="margin-top:16px;display:flex;flex-direction:column;gap:24px"></div></div><div class="rim"></div>';
     function renderCrypto(d) {
+      if (!crypto) return;
       var rows = (d.crypto || []).slice(0, 3);
       crypto.querySelector(".crypto-rows").innerHTML = rows.map(function (c) {
         var ohlc = c.ohlc || [];
         var mn = Infinity, mx = -Infinity;
         ohlc.forEach(function (k) { mn = Math.min(mn, k[2]); mx = Math.max(mx, k[1]); });
         if (!isFinite(mn)) { mn = 0; mx = 1; }
-        var W = 150, Hh = 42, pad = 2, span = Math.max(1e-9, mx - mn);
+        var W = 150, Hh = 54, pad = 2, span = Math.max(1e-9, mx - mn);
         function Y(v) { return pad + (1 - (v - mn) / span) * (Hh - pad * 2); }
         var cw = W / 7, candles = "";
         ohlc.forEach(function (k, i) {
@@ -549,14 +491,14 @@
 
     /* ---- Stocks: weekly volume bars ---- */
     var stocks = $id("stocks");
-    stocks.innerHTML = bg(GR.pink) + '<div class="in-c">' +
+    if (stocks) stocks.innerHTML = bg(GR.pink) + '<div class="in-c">' +
       '<div class="ttl">Stocks</div><div class="muted" style="margin-top:4px">Weekly volume · thousands</div>' +
       '<svg class="stocks-svg" style="display:block;margin-top:20px" aria-hidden="true"></svg></div><div class="rim"></div>';
     function renderStocks(d) {
       var st = d.stocks || { days: [], values: [] };
       var days = st.days || [], vals = st.values || [];
       var svg = stocks.querySelector(".stocks-svg");
-      var W = Math.max(1, stocks.clientWidth - 48), Hh = 180, max = Math.max.apply(null, vals.concat([1]));
+      var W = Math.max(1, stocks.clientWidth - 48), Hh = 225, max = Math.max.apply(null, vals.concat([1]));
       var gap = W / Math.max(1, days.length), bw = Math.min(34, gap * 0.5);
       svg.setAttribute("width", W);
       svg.setAttribute("height", Hh);
@@ -571,44 +513,11 @@
       svg.innerHTML = html;
     }
 
-    /* ---------- switches ---------- */
-    function buildSwitches() {
-      var per = $id("period"), ccy = $id("ccy");
-      per.innerHTML = ["1W", "1M", "3M", "1Y", "All"].map(function (p) {
-        return '<button type="button" aria-pressed="' + (S.period === p) + '">' + p + '</button>';
-      }).join("");
-      ccy.innerHTML = ["USD", "EUR", "GBP", "INR"].map(function (c) {
-        return '<button type="button" aria-pressed="' + (S.ccy === c) + '">' + c + '</button>';
-      }).join("");
-      per.querySelectorAll("button").forEach(function (b) {
-        b.addEventListener("click", function () {
-          S.period = b.textContent;
-          buildSwitches();
-          renderNW();
-          renderRet();
-        });
-      });
-      ccy.querySelectorAll("button").forEach(function (b) {
-        b.addEventListener("click", function () {
-          S.ccy = b.textContent;
-          buildSwitches();
-          renderAll();
-        });
-      });
-    }
-
     /* ---------- render all / update / destroy ---------- */
     var cur = data;
     function renderAll() {
       renderNW();
-      renderAlloc();
-      renderRet();
-      renderCash();
-      renderPay(cur);
-      renderGoals(cur);
       renderFlow(cur);
-      renderCrypto(cur);
-      renderStocks(cur);
     }
     var resizeRaf = 0;
     function onResize() {
@@ -627,10 +536,15 @@
       rootObserver.observe(root);
     }
 
-    buildSwitches();
     renderAll();
     // The entrance animation targets the .fpb-c wrapper, not the .fpb root
     // (the CSS selector is `.fpb .in .card` — .in must be a child of .fpb).
+    // Apply immediately AND via RAF so cards never stay invisible if the
+    // animation frame is dropped (e.g. hidden webview / reduced motion).
+    (function show() {
+      var c = root.querySelector(".fpb-c");
+      if (c) c.classList.add("in");
+    })();
     RAF(function () {
       var c = root.querySelector(".fpb-c");
       if (c) c.classList.add("in");
