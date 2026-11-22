@@ -286,15 +286,21 @@
   .row .remove {
     appearance: none;
     background: transparent;
-    border: none;
-    color: var(--mute);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     line-height: 1;
-    padding: 4px;
-    transition: color .15s;
+    padding: 6px 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
   }
-  .row .remove:hover { color: var(--orange); }
+  .row .remove:hover { background: var(--panel); border-color: var(--orange); color: var(--orange); }
 
   .portfolio-total {
     margin-top: 16px;
