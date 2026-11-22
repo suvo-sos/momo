@@ -347,10 +347,9 @@ function classFor(v) {
 }
 
 function inkColorFor(change) {
-  if (change >= 0.02) return '#0b6e2f';
-  if (change >= 0)    return '#4ade80';
-  if (change >= -0.02) return '#f87171';
-  return '#d1001c';
+  // Up → green, down → red. Re-tints the Anodized Ink (embers) background
+  // so the room colour carries the portfolio mood.
+  return change > 0 ? '#0b6e2f' : '#d1001c';
 }
 
 const COIN_ICONS = { BTC: 1, ETH: 1027, SOL: 5426, BNB: 1839, XRP: 52, DOGE: 74, ADA: 2010, AVAX: 5805, LINK: 1975, TON: 11419 };

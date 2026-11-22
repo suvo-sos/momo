@@ -379,7 +379,7 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         config.userContentController = controller
 
         let win = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 820),
+            contentRect: NSRect(x: 0, y: 0, width: 770, height: 820),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -398,7 +398,7 @@ final class MomoApp: NSObject, NSApplicationDelegate, WKNavigationDelegate, WKSc
         win.contentView = web
         win.center()
 
-        win.setFrameAutosaveName("MomoSettings2")
+        // Don't restore a saved (narrower) frame — use the full width above.
 
         settingsWindow = win
         settingsWeb = web
