@@ -80,6 +80,16 @@ PLIST
 echo "→ signing (skipped — local build, ad-hoc rejected by macOS 27 launch constraints)"
 # codesign --force --deep -s - "$APP" 2>/dev/null || true
 
+echo "→ packaging Momo.dmg and Momo.zip"
+rm -f Momo.dmg Momo.zip
+PKG_ROOT="$(mktemp -d)/Momo_dist"
+mkdir -p "$PKG_ROOT"
+cp -R "$APP" "$PKG_ROOT/"
+ln -s /Applications "$PKG_ROOT/Applications"
+hdiutil create -volname "Momo" -srcfolder "$PKG_ROOT" -ov -format UDZO -o Momo.dmg >/dev/null
+rm -rf "$PKG_ROOT"
+ditto -c -k --keepParent "$APP" Momo.zip
+
 # Restart the running copy so a build always ends with the new binary live.
 # `./build.sh --no-launch` builds without touching what is running.
 if [[ "${1:-}" != "--no-launch" ]]; then
