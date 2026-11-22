@@ -26,16 +26,6 @@ An aesthetic wallpaper that tells you your portfolio status. It turns green when
 
 Works out of the box with Momo's built-in CoinMarketCap key. Prefer to build it? See [Quick start](#quick-start).
 
-<p align="center">
-  <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-13%2B-black?logo=apple" alt="macOS"></a>
-  <a href="https://www.swift.org/"><img src="https://img.shields.io/badge/Swift-5-orange?logo=swift" alt="Swift"></a>
-  <a href="https://coinmarketcap.com/api/"><img src="https://img.shields.io/badge/CoinMarketCap-API-3861FB" alt="CoinMarketCap API"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT"></a>
-  <a href="https://dorahacks.io/"><img src="https://img.shields.io/badge/Build%20with%20CMC-Round%202-3861FB" alt="Build with CMC — Round 2"></a>
-</p>
-
-Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track: **Data and Visualisation**.
-
 ---
 
 ## Screenshots
