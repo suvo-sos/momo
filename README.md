@@ -12,7 +12,7 @@ Your portfolio is your wallpaper. Green when you're up, red when you're down. No
 
 <p align="center">
   <a href="https://github.com/suvo-sos/momo/releases/tag/v0.1.1">
-    <img src="https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white" width="400" alt="Download Momo for Mac">
+    <img src="https://img.shields.io/badge/Download_for_macOS-FFFFFF?style=for-the-badge&logo=apple&logoColor=black" width="400" alt="Download Momo for Mac">
   </a>
 </p>
 
