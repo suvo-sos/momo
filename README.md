@@ -19,7 +19,7 @@ A live macOS wallpaper that turns your crypto holdings into ambient light. Up, t
 1. Open `Momo.dmg`, drag **Momo.app** into **Applications**, run it. A `▞` appears in your menu bar.
 2. First open is blocked (not notarized) — fix it with: `xattr -d com.apple.quarantine /Applications/Momo.app`
 
-Works out of the box with Momo's built-in CoinMarketCap key. If it runs out of credits, paste your own free key into **Settings → Your own CMC key**. Prefer to build it? See [Quick start](#quick-start).
+Works out of the box with Momo's built-in CoinMarketCap key. Prefer to build it? See [Quick start](#quick-start).
 
 <p align="center">
   <a href="https://www.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-13%2B-black?logo=apple" alt="macOS"></a>
@@ -57,22 +57,12 @@ Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track
 
 ## Quick start
 
-Requires macOS 13+ and Xcode Command Line Tools (`xcode-select --install`).
-
 ```bash
 git clone https://github.com/suvo-sos/momo.git
 cd momo
 ./build.sh
 open Momo.app
 ```
-
-A LaunchAgent keeps it alive across login and crashes. Settings (holdings, currency, refresh, theme, your own key) lives in the menu bar.
-
-## How it works
-
-Swift polls the CoinMarketCap API every 60s, builds a small JSON snapshot, and pushes it into a `WKWebView` that paints the desktop. The API call lives in Swift, not JavaScript: the page loads from `file://` so `fetch` is blocked by CORS, and a key in page source would be a published key.
-
-One limit: the wallpaper ignores mouse events, so only the cursor *position* reaches it (polled 30×/s). Ledger and Scale react to where your cursor is, not to clicks.
 
 ## The API
 
@@ -93,8 +83,6 @@ X-CMC_PRO_API_KEY: <your key>
   "quote": { "USD": { "price": 91204.0, "percent_change_24h": 2.14 } } } },
   "status": { "error_code": 0, "credit_count": 1 } }
 ```
-
-**Feedback for the CMC team:** no batched endpoint returns `logo` + `id` with price; `ohlcv/historical` is a higher tier than `quotes/historical` yet has the sane candle semantics; `content/*` being Professional-only removes the obvious way to explain a move; RWA endpoints returned `500 system busy` all session; the `500` from DEX/RWA comes inside a 200 envelope, which is easy to mis-handle.
 
 ---
 
