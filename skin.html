@@ -537,6 +537,7 @@ function buildBentoData(snap) {
   return {
     history: bentoHistory,
     netWorth: snap ? snap.portfolio.value : 22400,
+    change24h: snap ? snap.portfolio.change24h : 0,
     payments: BENTO_DEMO.payments,
     goals: BENTO_DEMO.goals,
     cashflow: BENTO_DEMO.cashflow,

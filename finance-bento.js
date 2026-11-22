@@ -363,12 +363,15 @@
     }
     function renderNW() {
       nwData = series();
-      var last = nwData[nwData.length - 1], prev = nwData[Math.max(0, nwData.length - 2)];
+      var last = nwData[nwData.length - 1];
       var t = (cur && cur.netWorth) ? cur.netWorth : total(last);
-      var pt = total(prev), chg = pt ? (t - pt) / pt : 0;
+      // Live 24h change from the CMC snapshot. The old code compared the
+      // live total to the previous point of the demo history, so it showed
+      // a wrong number (e.g. -28.7%) while the real change was +5.2%.
+      var chg = (cur && typeof cur.change24h === "number") ? cur.change24h : 0;
       nwNum.count(t);
       var dEl = nw.querySelector(".nwd");
-      dEl.textContent = (chg >= 0 ? "+" : "−") + Math.abs(chg * 100).toFixed(1) + "% vs prev";
+      dEl.textContent = (chg >= 0 ? "+" : "−") + Math.abs(chg * 100).toFixed(1) + "% today";
       dEl.style.color = chg >= 0 ? ACC : "#ff7a7a";
       /* nwc removed */
       if (nwGrow < 1 && !reduce) {
