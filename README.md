@@ -16,7 +16,11 @@ Built for **Build with CMC: API Hackathon, Round 2** (DoraHacks, 2026) — Track
 
 **macOS 13+** — get the app, no build needed:
 
-### [⬇ Download Momo for Mac (.dmg)](https://github.com/suvo-sos/momo/releases/latest)
+<p align="center">
+  <a href="https://github.com/suvo-sos/momo/releases/latest">
+    <img src="https://img.shields.io/badge/Download_for_macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download Momo for Mac">
+  </a>
+</p>
 
 1. Open `Momo.dmg` and drag **Momo.app** into **Applications**.
 2. Run it. A `▞` appears in your menu bar — that's the whole UI.
