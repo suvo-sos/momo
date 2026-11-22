@@ -285,22 +285,23 @@
   }
   .row .remove {
     appearance: none;
-    background: transparent;
+    background: rgba(255,255,255,.06);
     border: 1px solid var(--border);
     border-radius: 6px;
-    color: var(--text);
+    color: #ff7a7a;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 20px;
+    font-weight: 700;
     line-height: 1;
-    padding: 6px 8px;
-    width: 32px;
-    height: 32px;
+    padding: 0;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all .15s;
   }
-  .row .remove:hover { background: var(--panel); border-color: var(--orange); color: var(--orange); }
+  .row .remove:hover { background: #ff7a7a; border-color: #ff7a7a; color: #fff; }
 
   .portfolio-total {
     margin-top: 16px;
