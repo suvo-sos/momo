@@ -213,11 +213,19 @@ Not done:
 - only **one** wallpaper theme exists; four more were specified
 - no demo/exhibition mode for a machine without the key
 - no browser preview page (needed for judges who won't install anything)
-- `.dmg` packaging, quarantine instructions, download page
-- README (endpoints used, a real request + response, API feedback) — required
 - demo video (2–3 min, required)
 - X post with `#BuildwithCMC` linking the submission (required)
 - DoraHacks submission with the track selected
+
+Done 2026-11-22:
+
+- README (endpoints used, a real request + response, API feedback) — required
+- `.dmg` packaging: `package.sh` builds `Momo.dmg` (app + Applications
+  shortcut) and a `Momo.zip` fallback from `Momo.app`; quarantine instructions
+  are in the README's Download section. Still to do by hand on the Mac: run
+  `./package.sh`, then publish the `.dmg` as a GitHub Release (tag `v0.1.1`) —
+  the README links to `/releases/latest`, so the download button goes live
+  the moment the release exists. No releases/tags exist on GitHub yet.
 
 ## 10. Open decisions
 
